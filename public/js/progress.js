@@ -5,12 +5,14 @@ const StudentProgress = {
   currentSemester: 3,
 
   async init() {
-    await this.loadProgress(this.currentSemester);
+    const sem = (window.StudentApp && StudentApp.currentUser && StudentApp.currentUser.semester) ? parseInt(StudentApp.currentUser.semester, 10) : this.currentSemester;
+    await this.loadProgress(sem);
   },
 
   async loadProgress(semester = 3) {
     this.currentSemester = semester;
-    const res = await API.getStudentProgress(this.activeUserId, semester);
+    const userId = (window.StudentApp && StudentApp.currentUser && StudentApp.currentUser.id) ? StudentApp.currentUser.id : this.activeUserId;
+    const res = await API.getStudentProgress(userId, semester);
     if (res.success && res.data) {
       this.currentData = res.data;
       this.renderDashboard();

@@ -431,29 +431,20 @@ const StudentApp = {
   },
 
   async loadBranches() {
+    // Branches cache for profile dropdown
     const res = await API.getBranches();
     if (res.success && res.data) {
       this.branchesList = res.data;
-      this.renderBranches();
     }
   },
 
-  renderBranches() {
-    const container = document.getElementById('studentBranchGrid');
-    if (!container) return;
-
-    container.innerHTML = this.branchesList.map(b => `
-      <div class="branch-card ${b.id === this.activeBranch ? 'active' : ''}" onclick="StudentApp.selectBranch('${b.id}')">
-        <div class="branch-icon">${b.icon}</div>
-        <div class="branch-name">${b.name}</div>
-        <span class="branch-code">Code: ${b.code}</span>
-      </div>
-    `).join('');
-  },
-
   async selectBranch(branchId) {
-    this.activeBranch = branchId;
-    this.renderBranches();
+    // Strictly preserve enrolled student branch
+    if (this.currentUser && this.currentUser.branch_id) {
+      this.activeBranch = this.currentUser.branch_id;
+    } else {
+      this.activeBranch = branchId;
+    }
     await this.loadSubjects();
   },
 
@@ -477,7 +468,30 @@ const StudentApp = {
   async loadSubjects(search = '') {
     const container = document.getElementById('studentSubjectsGrid');
     if (container) {
-      container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #38bdf8; padding: 2rem;">Loading GTU subjects...</div>`;
+      container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #38bdf8; padding: 2rem;">Loading subjects for your enrolled course...</div>`;
+    }
+
+    // Strictly lock branch to the authenticated student's enrolled branch
+    if (this.currentUser && this.currentUser.branch_id) {
+      this.activeBranch = this.currentUser.branch_id;
+    }
+
+    const branchName = (this.currentUser && this.currentUser.branch_name) 
+      ? this.currentUser.branch_name 
+      : (this.activeBranch === 'ce' ? 'Computer Engineering' : this.activeBranch.toUpperCase());
+
+    const titleEl = document.getElementById('studentSubjectsHeaderTitle');
+    const subEl = document.getElementById('studentSubjectsHeaderSub');
+    if (titleEl) {
+      titleEl.innerHTML = `<span>📚</span> ${branchName} • Semester ${this.activeSem} Subjects`;
+    }
+    if (subEl) {
+      subEl.textContent = `Strictly showing verified syllabus & study materials for your enrolled course (${branchName}).`;
+    }
+
+    const semSubEl = document.getElementById('enrolledSemHeaderSub');
+    if (semSubEl) {
+      semSubEl.textContent = `Showing Semester ${this.activeSem} curriculum for ${branchName}`;
     }
 
     const params = {
@@ -502,16 +516,17 @@ const StudentApp = {
 
     if (this.subjectsList.length === 0) {
       const schemeName = this.activeScheme === 'old' ? 'Old Scheme (33-Series)' : 'New Scheme (43-Series)';
+      const branchName = (this.currentUser && this.currentUser.branch_name) || 'Enrolled Course';
       container.innerHTML = `
         <div style="grid-column: 1/-1; text-align: center; padding: 3rem; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px dashed rgba(255,255,255,0.15);">
           <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📚</div>
-          <h3 style="color: #fff; margin-bottom: 0.5rem;">No subjects found for ${schemeName} in Semester ${this.activeSem}</h3>
+          <h3 style="color: #fff; margin-bottom: 0.5rem;">No subjects found for ${schemeName} in Semester ${this.activeSem} (${branchName})</h3>
           <p style="font-size: 0.95rem; color: #94a3b8; max-width: 500px; margin: 0 auto 1.5rem auto;">
-            Try switching to <strong>All Schemes</strong> or browse another semester for this branch.
+            Try switching to <strong>All Schemes</strong> or browse another semester for your enrolled course.
           </p>
           <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
             <button class="btn btn-primary btn-sm" onclick="StudentApp.selectScheme('all')">View All Schemes</button>
-            <button class="btn btn-secondary btn-sm" onclick="StudentApp.selectSemester(3)">View Sem 3 Core</button>
+            <button class="btn btn-secondary btn-sm" onclick="StudentApp.selectSemester(${this.currentUser ? this.currentUser.semester : 3})">Return to Enrolled Semester</button>
           </div>
         </div>
       `;

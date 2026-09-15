@@ -267,22 +267,11 @@
           <!-- Rendered dynamically by StudentApp.renderEnrolledBanner() -->
         </div>
 
-        <!-- 1. Select Diploma Branch -->
-        <div class="section-header" id="branchSectionHeader">
+        <!-- 1. Enrolled Course Semester & Teaching Scheme Directory -->
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
           <div>
-            <h2><span>🏛️</span> Select Engineering Branch</h2>
-            <p>Choose your diploma engineering branch to view semester subjects</p>
-          </div>
-        </div>
-        <div class="branch-grid" id="studentBranchGrid">
-          <!-- Rendered dynamically -->
-        </div>
-
-        <!-- 2. Select Semester & GTU Scheme -->
-        <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: gap; gap: 1rem;">
-          <div>
-            <h2><span>📅</span> Select Semester & GTU Scheme</h2>
-            <p>Organized semester-wise for GTU Diploma New Scheme (43-Series) and Old Scheme (33-Series)</p>
+            <h2 id="enrolledSemHeaderTitle"><span>📅</span> Semester Curriculum & Syllabus</h2>
+            <p id="enrolledSemHeaderSub">Showing curriculum exclusively for your enrolled branch and course</p>
           </div>
 
           <!-- GTU Teaching Scheme Switcher -->
@@ -298,7 +287,7 @@
             </button>
           </div>
         </div>
-        <div class="sem-tabs">
+        <div class="sem-tabs" id="studentSemTabsWrap">
           <button class="sem-tab-btn" data-sem="1" onclick="StudentApp.selectSemester(1)">📘 Semester 1</button>
           <button class="sem-tab-btn" data-sem="2" onclick="StudentApp.selectSemester(2)">📙 Semester 2</button>
           <button class="sem-tab-btn active" data-sem="3" onclick="StudentApp.selectSemester(3)">📗 Semester 3</button>
@@ -307,11 +296,11 @@
           <button class="sem-tab-btn" data-sem="6" onclick="StudentApp.selectSemester(6)">🎓 Semester 6</button>
         </div>
 
-        <!-- 3. Subjects Grid -->
+        <!-- 2. Enrolled Subjects Grid -->
         <div class="section-header">
           <div>
-            <h2><span>📚</span> Semester Subjects & Resource Directory</h2>
-            <p>Click "Open Subject Hub" to access chapter notes, textbooks, question papers & solved solutions</p>
+            <h2 id="studentSubjectsHeaderTitle"><span>📚</span> Enrolled Semester Subjects</h2>
+            <p id="studentSubjectsHeaderSub">Click "Open Subject Hub" to access chapter notes, textbooks, question papers & solved solutions</p>
           </div>
         </div>
         <div class="subject-grid" id="studentSubjectsGrid">
