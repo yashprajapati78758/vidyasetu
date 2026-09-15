@@ -30,7 +30,7 @@ const StudentApp = {
     const floatingAiBtn = document.getElementById('floatingAiBtn');
 
     if (this.currentUser && this.authToken) {
-      // Authenticated Student View
+      // Authenticated Student View -> Show Full Dashboard
       if (gatewaySection) gatewaySection.style.display = 'none';
       if (mainWrapper) mainWrapper.style.display = 'block';
       if (navLinks) navLinks.style.display = 'flex';
@@ -48,13 +48,14 @@ const StudentApp = {
       if (window.StudentProgress) await StudentProgress.init();
       if (window.AiTutor) AiTutor.init();
     } else {
-      // Unauthenticated Guest View (Gateway Screen)
+      // Unauthenticated Guest View -> Show Dedicated Login & Register Gateway Screen First
       if (gatewaySection) gatewaySection.style.display = 'flex';
       if (mainWrapper) mainWrapper.style.display = 'none';
       if (navLinks) navLinks.style.display = 'none';
       if (floatingAiBtn) floatingAiBtn.style.display = 'none';
 
       this.renderNavAuth();
+      this.switchGatewayTab('signin');
     }
   },
 
@@ -67,7 +68,7 @@ const StudentApp = {
       navAuthContainer.innerHTML = `
         <div style="display: flex; align-items: center; gap: 0.6rem;">
           <div class="student-profile-badge" onclick="StudentApp.openProfileDetails()" title="Click to view & manage course profile">
-            <img src="${this.currentUser.avatar || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&q=80'}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" alt="Student">
+            <img src="${this.currentUser.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80'}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" alt="Student">
             <div style="line-height: 1.2;">
               <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">${this.currentUser.name}</div>
               <div style="font-size: 0.68rem; color: #38bdf8;">${branchDisplay} • Sem ${this.currentUser.semester}</div>
@@ -87,7 +88,7 @@ const StudentApp = {
           <button class="btn btn-primary btn-sm" onclick="StudentApp.switchGatewayTab('signin')" style="font-size: 0.82rem; padding: 6px 14px; font-weight: 700;">
             🔑 Sign In
           </button>
-          <button class="btn btn-secondary btn-sm" onclick="StudentApp.switchGatewayTab('register')" style="font-size: 0.82rem; padding: 6px 12px;">
+          <button class="btn btn-secondary btn-sm" onclick="StudentApp.switchGatewayTab('register')" style="font-size: 0.82rem; padding: 6px 12px; font-weight: 600;">
             📝 Register
           </button>
           <a href="/admin" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; padding: 6px 10px;">
@@ -164,23 +165,17 @@ const StudentApp = {
       if (formRegister) formRegister.style.display = 'flex';
     }
 
+    // If unauthenticated, smoothly scroll to auth card
     const gatewaySection = document.getElementById('studentAuthGatewaySection');
-    if (gatewaySection && gatewaySection.style.display === 'none') {
-      this.openAuthModal(tab);
+    if (gatewaySection && gatewaySection.style.display !== 'none') {
+      const card = document.querySelector('.gateway-auth-card');
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   },
 
   fillGatewayDemoCredentials() {
     const identInput = document.getElementById('gatewayLoginIdentifier');
     const passInput = document.getElementById('gatewayLoginPassword');
-    if (identInput) identInput.value = '226170307001';
-    if (passInput) passInput.value = 'student123';
-    if (window.App) App.showToast('Demo GTU student credentials filled!', 'info');
-  },
-
-  fillDemoStudentCredentials() {
-    const identInput = document.getElementById('authLoginIdentifier');
-    const passInput = document.getElementById('authLoginPassword');
     if (identInput) identInput.value = '226170307001';
     if (passInput) passInput.value = 'student123';
     if (window.App) App.showToast('Demo GTU student credentials filled!', 'info');
@@ -208,7 +203,7 @@ const StudentApp = {
         await this.syncAuthState();
         if (window.App) App.showToast(`Welcome back, ${res.user.name}! Locked to ${res.user.branch_name} (Sem ${this.activeSem})`, 'success');
       } else {
-        if (window.App) App.showToast(res.error || 'Authentication failed', 'error');
+        if (window.App) App.showToast(res.error || 'Invalid credentials', 'error');
       }
     } catch (err) {
       if (window.App) App.showToast('Login Error: ' + err.message, 'error');
@@ -270,122 +265,6 @@ const StudentApp = {
     }
   },
 
-  openAuthModal(tab = 'signin') {
-    const modal = document.getElementById('studentAuthModal');
-    if (modal) modal.classList.add('active');
-    this.switchAuthTab(tab);
-  },
-
-  closeAuthModal() {
-    const modal = document.getElementById('studentAuthModal');
-    if (modal) modal.classList.remove('active');
-  },
-
-  switchAuthTab(tab) {
-    const btnSignIn = document.getElementById('tabBtnSignIn');
-    const btnRegister = document.getElementById('tabBtnRegister');
-    const formSignIn = document.getElementById('formStudentSignIn');
-    const formRegister = document.getElementById('formStudentRegister');
-
-    if (tab === 'signin') {
-      if (btnSignIn) btnSignIn.classList.add('active');
-      if (btnRegister) btnRegister.classList.remove('active');
-      if (formSignIn) formSignIn.style.display = 'flex';
-      if (formRegister) formRegister.style.display = 'none';
-    } else {
-      if (btnSignIn) btnSignIn.classList.remove('active');
-      if (btnRegister) btnRegister.classList.add('active');
-      if (formSignIn) formSignIn.style.display = 'none';
-      if (formRegister) formRegister.style.display = 'flex';
-    }
-  },
-
-  async handleStudentLogin(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btnStudentLoginSubmit');
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = '⏳ Signing in...';
-    }
-
-    try {
-      const identifier = document.getElementById('authLoginIdentifier').value.trim();
-      const password = document.getElementById('authLoginPassword').value.trim();
-
-      const res = await API.loginStudent({ identifier, password });
-      if (res.success && res.user) {
-        this.currentUser = res.user;
-        this.authToken = res.token;
-        localStorage.setItem('vidyasetu_student_user', JSON.stringify(res.user));
-        localStorage.setItem('vidyasetu_student_token', res.token);
-
-        this.closeAuthModal();
-        await this.syncAuthState();
-        if (window.App) App.showToast(`Welcome back, ${res.user.name}! (Sem ${this.activeSem})`, 'success');
-      } else {
-        if (window.App) App.showToast(res.error || 'Authentication failed', 'error');
-      }
-    } catch (err) {
-      if (window.App) App.showToast('Login Error: ' + err.message, 'error');
-    } finally {
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = '🚀 Sign In to VidyaSetu';
-      }
-    }
-  },
-
-  async handleStudentRegister(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btnStudentRegSubmit');
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = '⏳ Registering...';
-    }
-
-    try {
-      const university = document.getElementById('authRegUniversity').value;
-      const course_type = document.getElementById('authRegCourse').value;
-      const branch_id = document.getElementById('authRegBranch').value;
-      const semester = parseInt(document.getElementById('authRegSem').value, 10);
-      const name = document.getElementById('authRegName').value.trim();
-      const enrollment_no = document.getElementById('authRegEnrollment').value.trim();
-      const email = document.getElementById('authRegEmail').value.trim();
-      const password = document.getElementById('authRegPassword').value.trim();
-
-      const res = await API.registerStudent({
-        university,
-        course_type,
-        branch_id,
-        semester,
-        name,
-        enrollment_no,
-        email,
-        password
-      });
-
-      if (res.success && res.user) {
-        this.currentUser = res.user;
-        this.authToken = res.token;
-        localStorage.setItem('vidyasetu_student_user', JSON.stringify(res.user));
-        localStorage.setItem('vidyasetu_student_token', res.token);
-
-        this.closeAuthModal();
-        await this.syncAuthState();
-        if (window.App) App.showToast(`Account registered! Welcome to ${res.user.branch_name} Sem ${semester}`, 'success');
-      } else {
-        if (window.App) App.showToast(res.error || 'Registration failed', 'error');
-      }
-    } catch (err) {
-      if (window.App) App.showToast('Registration Error: ' + err.message, 'error');
-    } finally {
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = '🎓 Register & Access My Course';
-      }
-    }
-  },
-
   async logoutStudent() {
     this.currentUser = null;
     this.authToken = null;
@@ -409,7 +288,7 @@ const StudentApp = {
       const u = this.currentUser;
       view.innerHTML = `
         <div style="display: flex; align-items: center; gap: 1rem; background: rgba(10,15,29,0.7); padding: 1rem; border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.08);">
-          <img src="${u.avatar || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&q=80'}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;" alt="Avatar">
+          <img src="${u.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80'}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;" alt="Avatar">
           <div>
             <h3 style="color: #fff; font-size: 1.1rem; margin: 0;">${u.name}</h3>
             <p style="color: #38bdf8; font-size: 0.8rem; margin: 2px 0 0 0;">GTU Enrollment: <strong>${u.enrollment_no}</strong></p>

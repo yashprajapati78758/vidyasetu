@@ -124,8 +124,8 @@
           <button type="submit" class="btn btn-primary" id="btnGatewayLoginSubmit" style="margin-top: 0.5rem; justify-content: center; font-weight: 700; padding: 0.8rem;">
             🚀 Sign In & Unlock My Course
           </button>
-          <div style="text-align: center; font-size: 0.82rem; color: #94a3b8; margin-top: 0.25rem;">
-            New student? <a href="javascript:void(0)" onclick="StudentApp.switchGatewayTab('register')" style="color: #38bdf8; font-weight: 600;">Create Account</a>
+          <div style="text-align: center; font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem;">
+            New student? <a href="javascript:void(0)" onclick="StudentApp.switchGatewayTab('register')" style="color: #38bdf8; font-weight: 700;">Create Account (Register Free)</a>
           </div>
         </form>
 
@@ -201,8 +201,8 @@
           <button type="submit" class="btn btn-primary" id="btnGatewayRegSubmit" style="margin-top: 0.5rem; justify-content: center; font-weight: 700; padding: 0.8rem;">
             🎓 Register & Access My Course
           </button>
-          <div style="text-align: center; font-size: 0.82rem; color: #94a3b8; margin-top: 0.25rem;">
-            Already registered? <a href="javascript:void(0)" onclick="StudentApp.switchGatewayTab('signin')" style="color: #38bdf8; font-weight: 600;">Sign In</a>
+          <div style="text-align: center; font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem;">
+            Already registered? <a href="javascript:void(0)" onclick="StudentApp.switchGatewayTab('signin')" style="color: #38bdf8; font-weight: 700;">Sign In here</a>
           </div>
         </form>
       </div>
@@ -279,7 +279,7 @@
         </div>
 
         <!-- 2. Select Semester & GTU Scheme -->
-        <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: gap; gap: 1rem;">
           <div>
             <h2><span>📅</span> Select Semester & GTU Scheme</h2>
             <p>Organized semester-wise for GTU Diploma New Scheme (43-Series) and Old Scheme (33-Series)</p>
@@ -428,6 +428,39 @@
   </div>
 
   <!-- ==========================================
+       MODAL 0.5: STUDENT PROFILE & SEMESTER MANAGER
+       ========================================== -->
+  <div class="student-auth-overlay" id="studentProfileModal">
+    <div class="student-auth-box" style="max-width: 480px;">
+      <div class="student-auth-tabs">
+        <div style="padding: 1rem 1.25rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 0.5rem; flex: 1;">
+          <span>🎓</span> Student Profile & Academic Course
+        </div>
+        <button style="background: none; border: none; color: #94a3b8; font-size: 1.2rem; padding: 0 1rem; cursor: pointer;" onclick="StudentApp.closeProfileModal()">✕</button>
+      </div>
+      <form class="student-auth-body" id="formStudentProfile" onsubmit="StudentApp.handleProfileUpdate(event)">
+        <div id="profileDetailsView" style="display: flex; flex-direction: column; gap: 1rem;">
+          <!-- Populated dynamically -->
+        </div>
+        <div class="form-group" style="margin-top: 0.5rem;">
+          <label style="font-size: 0.85rem; color: #cbd5e1;">⚡ Promote / Change Current Semester</label>
+          <select id="profileEditSemester" class="form-control">
+            <option value="1">Semester 1</option>
+            <option value="2">Semester 2</option>
+            <option value="3">Semester 3</option>
+            <option value="4">Semester 4</option>
+            <option value="5">Semester 5</option>
+            <option value="6">Semester 6</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary" id="btnProfileSaveSubmit" style="justify-content: center; font-weight: 700;">
+          💾 Update & Save Academic Progress
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
        MODAL 1: VIDYASETU AI GURU (DOUBT SOLVER)
        ========================================== -->
   <div class="ai-modal-overlay" id="aiModalOverlay">
@@ -479,154 +512,6 @@
           <span>🚀 Solve</span>
         </button>
       </div>
-    </div>
-  </div>
-
-  <!-- ==========================================
-       MODAL 0: STUDENT AUTHENTICATION (SIGN IN & REGISTER)
-       ========================================== -->
-  <div class="student-auth-overlay" id="studentAuthModal">
-    <div class="student-auth-box" style="max-width: 480px;">
-      <div class="student-auth-tabs">
-        <button class="student-auth-tab-btn active" id="tabBtnSignIn" onclick="StudentApp.switchAuthTab('signin')">
-          🔑 Student Sign In
-        </button>
-        <button class="student-auth-tab-btn" id="tabBtnRegister" onclick="StudentApp.switchAuthTab('register')">
-          📝 Create Account
-        </button>
-        <button style="background: none; border: none; color: #94a3b8; font-size: 1.2rem; padding: 0 1rem; cursor: pointer;" onclick="StudentApp.closeAuthModal()">✕</button>
-      </div>
-
-      <!-- Sign In Form -->
-      <form class="student-auth-body" id="formStudentSignIn" onsubmit="StudentApp.handleStudentLogin(event)">
-        <div class="form-group" style="margin-bottom: 0;">
-          <label style="font-size: 0.85rem; color: #cbd5e1;">GTU Enrollment Number or Email</label>
-          <input type="text" id="authLoginIdentifier" class="form-control" placeholder="e.g. 226170307001 or email" required>
-        </div>
-        <div class="form-group" style="margin-bottom: 0;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-            <label style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 0;">Password</label>
-            <span style="font-size: 0.75rem; color: #38bdf8; cursor: pointer;" onclick="StudentApp.fillDemoStudentCredentials()">⚡ Demo Student</span>
-          </div>
-          <input type="password" id="authLoginPassword" class="form-control" placeholder="Enter your password" required>
-        </div>
-        <button type="submit" class="btn btn-primary" id="btnStudentLoginSubmit" style="margin-top: 0.5rem; justify-content: center; font-weight: 700;">
-          🚀 Sign In to VidyaSetu
-        </button>
-        <div style="text-align: center; font-size: 0.82rem; color: #94a3b8; margin-top: 0.25rem;">
-          Don't have an account? <a href="javascript:void(0)" onclick="StudentApp.switchAuthTab('register')" style="color: #38bdf8; font-weight: 600;">Create Account</a>
-        </div>
-      </form>
-
-      <!-- Register Form -->
-      <form class="student-auth-body" id="formStudentRegister" onsubmit="StudentApp.handleStudentRegister(event)" style="display: none;">
-        <!-- University Selection -->
-        <div class="form-group" style="margin-bottom: 0;">
-          <label style="font-size: 0.85rem; color: #cbd5e1;">🏛️ University / Board</label>
-          <select id="authRegUniversity" class="form-control" required>
-            <option value="Gujarat Technological University (GTU)" selected>Gujarat Technological University (GTU)</option>
-            <option value="Nirma University">Nirma University</option>
-            <option value="Marwadi University">Marwadi University</option>
-            <option value="Parul University">Parul University</option>
-            <option value="MS University of Baroda (MSU)">MS University of Baroda (MSU)</option>
-            <option value="Dharmsinh Desai University (DDU)">Dharmsinh Desai University (DDU)</option>
-            <option value="Other Board / Technical University">Other Board / Technical University</option>
-          </select>
-        </div>
-
-        <!-- Course / Program Selection -->
-        <div class="form-group" style="margin-bottom: 0;">
-          <label style="font-size: 0.85rem; color: #cbd5e1;">📚 Course / Program</label>
-          <select id="authRegCourse" class="form-control" required>
-            <option value="Diploma in Engineering (Polytechnic)" selected>Diploma in Engineering (Polytechnic)</option>
-            <option value="Bachelor of Engineering (B.E. / B.Tech)">Bachelor of Engineering (B.E. / B.Tech)</option>
-          </select>
-        </div>
-
-        <!-- Branch & Semester -->
-        <div class="form-row" style="gap: 0.75rem;">
-          <div class="form-group" style="margin-bottom: 0;">
-            <label style="font-size: 0.85rem; color: #cbd5e1;">Branch</label>
-            <select id="authRegBranch" class="form-control" required>
-              <option value="ce" selected>Computer Engineering (07)</option>
-              <option value="it">IT (16)</option>
-              <option value="me">Mechanical (19)</option>
-              <option value="cl">Civil (06)</option>
-              <option value="ee">Electrical (09)</option>
-              <option value="ec">EC (11)</option>
-              <option value="ae">Automobile (02)</option>
-            </select>
-          </div>
-          <div class="form-group" style="margin-bottom: 0;">
-            <label style="font-size: 0.85rem; color: #cbd5e1;">Semester</label>
-            <select id="authRegSem" class="form-control" required>
-              <option value="1">Semester 1</option>
-              <option value="2">Semester 2</option>
-              <option value="3" selected>Semester 3</option>
-              <option value="4">Semester 4</option>
-              <option value="5">Semester 5</option>
-              <option value="6">Semester 6</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Personal Info -->
-        <div class="form-group" style="margin-bottom: 0;">
-          <label style="font-size: 0.85rem; color: #cbd5e1;">Full Name</label>
-          <input type="text" id="authRegName" class="form-control" placeholder="e.g. Yash Patel" required>
-        </div>
-        <div class="form-group" style="margin-bottom: 0;">
-          <label style="font-size: 0.85rem; color: #cbd5e1;">Enrollment Number</label>
-          <input type="text" id="authRegEnrollment" class="form-control" placeholder="e.g. 226190307001" required>
-        </div>
-        <div class="form-group" style="margin-bottom: 0;">
-          <label style="font-size: 0.85rem; color: #cbd5e1;">Email Address</label>
-          <input type="email" id="authRegEmail" class="form-control" placeholder="e.g. student@gtu.ac.in" required>
-        </div>
-        <div class="form-group" style="margin-bottom: 0;">
-          <label style="font-size: 0.85rem; color: #cbd5e1;">Password</label>
-          <input type="password" id="authRegPassword" class="form-control" placeholder="Create a password" required minlength="4">
-        </div>
-        <button type="submit" class="btn btn-primary" id="btnStudentRegSubmit" style="margin-top: 0.5rem; justify-content: center; font-weight: 700;">
-          🎓 Register & Access My Course
-        </button>
-        <div style="text-align: center; font-size: 0.82rem; color: #94a3b8; margin-top: 0.25rem;">
-          Already registered? <a href="javascript:void(0)" onclick="StudentApp.switchAuthTab('signin')" style="color: #38bdf8; font-weight: 600;">Sign In</a>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ==========================================
-       MODAL 0.5: STUDENT PROFILE & SEMESTER MANAGER
-       ========================================== -->
-  <div class="student-auth-overlay" id="studentProfileModal">
-    <div class="student-auth-box" style="max-width: 480px;">
-      <div class="student-auth-tabs">
-        <div style="padding: 1rem 1.25rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 0.5rem; flex: 1;">
-          <span>🎓</span> Student Profile & Academic Course
-        </div>
-        <button style="background: none; border: none; color: #94a3b8; font-size: 1.2rem; padding: 0 1rem; cursor: pointer;" onclick="StudentApp.closeProfileModal()">✕</button>
-      </div>
-      <form class="student-auth-body" id="formStudentProfile" onsubmit="StudentApp.handleProfileUpdate(event)">
-        <div id="profileDetailsView" style="display: flex; flex-direction: column; gap: 1rem;">
-          <!-- Populated dynamically -->
-        </div>
-        <div class="form-group" style="margin-top: 0.5rem;">
-          <label style="font-size: 0.85rem; color: #cbd5e1;">⚡ Promote / Change Current Semester</label>
-          <select id="profileEditSemester" class="form-control">
-            <option value="1">Semester 1</option>
-            <option value="2">Semester 2</option>
-            <option value="3">Semester 3</option>
-            <option value="4">Semester 4</option>
-            <option value="5">Semester 5</option>
-            <option value="6">Semester 6</option>
-          </select>
-        </div>
-        <button type="submit" class="btn btn-primary" id="btnProfileSaveSubmit" style="justify-content: center; font-weight: 700;">
-          💾 Update & Save Academic Progress
-        </button>
-      </form>
     </div>
   </div>
 
