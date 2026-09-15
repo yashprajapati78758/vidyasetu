@@ -1,0 +1,481 @@
+// VidyaSetu Dedicated Student Portal Application Controller (Strict Read-Only Mode)
+const StudentApp = {
+  currentTab: 'home',
+  activeBranch: 'ce',
+  activeSem: 3,
+  activeScheme: 'new',
+  activeSubjectId: null,
+  activeResourceTab: 'materials',
+  branchesList: [],
+  subjectsList: [],
+
+  // Resource Caches for robust modal opening without string escaping bugs
+  materialsMap: {},
+  booksMap: {},
+  questionsMap: {},
+  solutionsMap: {},
+
+  async init() {
+    this.bindEvents();
+    await this.loadBranches();
+    await this.loadSubjects();
+    await this.loadAnnouncements();
+    if (window.StudentProgress) await StudentProgress.init();
+    if (window.AiTutor) AiTutor.init();
+  },
+
+  bindEvents() {
+    const searchInput = document.getElementById('studentGlobalSearch');
+    if (searchInput) {
+      let debounce;
+      searchInput.addEventListener('input', (e) => {
+        clearTimeout(debounce);
+        debounce = setTimeout(() => {
+          this.loadSubjects(e.target.value.trim());
+        }, 300);
+      });
+    }
+  },
+
+  switchTab(tabName) {
+    this.currentTab = tabName;
+
+    // Update nav links
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.tab === tabName);
+    });
+
+    const sections = ['homeSection', 'subjectHubSection', 'progressSection'];
+    sections.forEach(s => {
+      const el = document.getElementById(s);
+      if (el) el.style.display = 'none';
+    });
+
+    if (tabName === 'home') {
+      const el = document.getElementById('homeSection');
+      if (el) el.style.display = 'block';
+    } else if (tabName === 'subject-hub') {
+      const el = document.getElementById('subjectHubSection');
+      if (el) el.style.display = 'block';
+    } else if (tabName === 'progress') {
+      const el = document.getElementById('progressSection');
+      if (el) {
+        el.style.display = 'block';
+        if (window.StudentProgress) StudentProgress.loadProgress(this.activeSem);
+      }
+    } else if (tabName === 'ai-guru') {
+      AiTutor.open();
+    }
+  },
+
+  async loadBranches() {
+    const res = await API.getBranches();
+    if (res.success && res.data) {
+      this.branchesList = res.data;
+      this.renderBranches();
+    }
+  },
+
+  renderBranches() {
+    const container = document.getElementById('studentBranchGrid');
+    if (!container) return;
+
+    container.innerHTML = this.branchesList.map(b => `
+      <div class="branch-card ${b.id === this.activeBranch ? 'active' : ''}" onclick="StudentApp.selectBranch('${b.id}')">
+        <div class="branch-icon">${b.icon}</div>
+        <div class="branch-name">${b.name}</div>
+        <span class="branch-code">Code: ${b.code}</span>
+      </div>
+    `).join('');
+  },
+
+  async selectBranch(branchId) {
+    this.activeBranch = branchId;
+    this.renderBranches();
+    await this.loadSubjects();
+  },
+
+  async selectSemester(semNum) {
+    this.activeSem = semNum;
+
+    document.querySelectorAll('.sem-tab-btn').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.sem, 10) === semNum);
+    });
+
+    await this.loadSubjects();
+    if (window.StudentProgress) StudentProgress.loadProgress(semNum);
+  },
+
+  async selectScheme(scheme) {
+    this.activeScheme = scheme;
+
+    document.querySelectorAll('.scheme-tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.scheme === scheme);
+    });
+
+    await this.loadSubjects();
+  },
+
+  async loadSubjects(search = '') {
+    const container = document.getElementById('studentSubjectsGrid');
+    if (container) {
+      container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #38bdf8; padding: 2rem;">Loading GTU subjects...</div>`;
+    }
+
+    const params = {
+      branch: this.activeBranch,
+      sem: this.activeSem
+    };
+    if (this.activeScheme && this.activeScheme !== 'all') {
+      params.scheme = this.activeScheme;
+    }
+    if (search) params.search = search;
+
+    const res = await API.getSubjects(params);
+    if (res.success && res.data) {
+      this.subjectsList = res.data;
+      this.renderSubjects();
+    }
+  },
+
+  renderSubjects() {
+    const container = document.getElementById('studentSubjectsGrid');
+    if (!container) return;
+
+    if (this.subjectsList.length === 0) {
+      const schemeName = this.activeScheme === 'old' ? 'Old Scheme (33-Series)' : 'New Scheme (43-Series)';
+      container.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 3rem; background: var(--bg-card); border-radius: var(--radius-lg); border: 1px dashed rgba(255,255,255,0.15);">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📚</div>
+          <h3 style="color: #fff; margin-bottom: 0.5rem;">No subjects found for ${schemeName} in Semester ${this.activeSem}</h3>
+          <p style="font-size: 0.95rem; color: #94a3b8; max-width: 500px; margin: 0 auto 1.5rem auto;">
+            Try switching to <strong>All Schemes</strong> or browse another semester for this branch.
+          </p>
+          <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+            <button class="btn btn-primary btn-sm" onclick="StudentApp.selectScheme('all')">View All Schemes</button>
+            <button class="btn btn-secondary btn-sm" onclick="StudentApp.selectSemester(3)">View Sem 3 Core</button>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = this.subjectsList.map(sub => {
+      const isOld = sub.scheme === 'old' || sub.subject_code.startsWith('33');
+      const schemeBadge = isOld
+        ? `<span class="badge-scheme old" title="GTU Old Teaching Scheme (33-Series)">📜 Old (33)</span>`
+        : `<span class="badge-scheme new" title="GTU New Teaching Scheme (43-Series)">🌟 New (43)</span>`;
+
+      return `
+        <div class="subject-card">
+          <div>
+            <div class="subject-header">
+              <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
+                <span class="subject-code-badge">${sub.subject_code}</span>
+                ${schemeBadge}
+              </div>
+              <span class="subject-credits">Sem ${sub.sem_number} • ${sub.credits} Cr</span>
+            </div>
+            <h3 class="subject-title">${sub.subject_name}</h3>
+            <div style="font-size: 0.78rem; color: #38bdf8; margin-bottom: 0.5rem;">Category: ${sub.category || 'Core Engineering'}</div>
+            <p class="subject-desc">${sub.description || 'GTU diploma official syllabus, chapter notes, textbooks, past papers & solved solutions.'}</p>
+          </div>
+
+          <div>
+            <div class="subject-stats-bar">
+              <div>
+                <div class="sub-stat-num">${sub.materials_count || 0}</div>
+                <div class="sub-stat-lbl">Notes</div>
+              </div>
+              <div>
+                <div class="sub-stat-num">${sub.books_count || 0}</div>
+                <div class="sub-stat-lbl">Books</div>
+              </div>
+              <div>
+                <div class="sub-stat-num">${sub.questions_count || 0}</div>
+                <div class="sub-stat-lbl">Papers</div>
+              </div>
+              <div>
+                <div class="sub-stat-num">${sub.solutions_count || 0}</div>
+                <div class="sub-stat-lbl">Solved</div>
+              </div>
+            </div>
+
+            <div class="subject-actions">
+              <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="StudentApp.openSubjectHub('${sub.id}')">
+                📚 Open Subject Hub
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="StudentApp.askSubjectDoubt('${sub.id}')" title="Ask AI Doubt Guru">
+                ✨ AI Doubt
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  askSubjectDoubt(subjectId) {
+    const sub = this.subjectsList.find(s => s.id === subjectId);
+    const subName = sub ? sub.subject_name : 'Diploma Engineering';
+    AiTutor.open(subName);
+  },
+
+  async openSubjectHub(subjectId) {
+    this.activeSubjectId = subjectId;
+    const res = await API.getSubjectById(subjectId);
+    if (!res.success || !res.data) {
+      if (window.App) App.showToast('Failed to load subject details', 'error');
+      return;
+    }
+
+    const sub = res.data;
+    this.switchTab('subject-hub');
+
+    const titleEl = document.getElementById('hubSubjectTitle');
+    const codeEl = document.getElementById('hubSubjectCode');
+    const branchEl = document.getElementById('hubSubjectBranch');
+    const descEl = document.getElementById('hubSubjectDesc');
+
+    const isOld = sub.scheme === 'old' || sub.subject_code.startsWith('33');
+    const schemeText = isOld ? '📜 GTU Old Scheme (33-Series)' : '🌟 GTU New Scheme (43-Series)';
+
+    if (titleEl) titleEl.textContent = sub.subject_name;
+    if (codeEl) codeEl.innerHTML = `GTU Code: <strong>${sub.subject_code}</strong> <span style="margin-left: 0.5rem; font-size: 0.75rem; color: ${isOld ? '#fbbf24' : '#34d399'};">(${schemeText})</span>`;
+    if (branchEl) branchEl.textContent = `${sub.branch_name} • Semester ${sub.sem_number} • ${sub.category || 'Core'}`;
+    if (descEl) descEl.textContent = sub.description || '';
+
+    await this.switchResourceTab(this.activeResourceTab);
+  },
+
+  async switchResourceTab(tab) {
+    this.activeResourceTab = tab;
+
+    document.querySelectorAll('.resource-tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+
+    const container = document.getElementById('studentResourceGrid');
+    if (!container) return;
+
+    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #38bdf8; padding: 2rem;">Loading ${tab}...</div>`;
+
+    if (tab === 'materials') {
+      const res = await API.getMaterials({ subject_id: this.activeSubjectId });
+      this.renderMaterials(res.data || []);
+    } else if (tab === 'books') {
+      const res = await API.getBooks({ subject_id: this.activeSubjectId });
+      this.renderBooks(res.data || []);
+    } else if (tab === 'questions') {
+      const res = await API.getQuestionBanks({ subject_id: this.activeSubjectId });
+      this.renderQuestions(res.data || []);
+    } else if (tab === 'solutions') {
+      const res = await API.getSolutions({ subject_id: this.activeSubjectId });
+      this.renderSolutions(res.data || []);
+    }
+  },
+
+  renderMaterials(materials) {
+    const container = document.getElementById('studentResourceGrid');
+    this.materialsMap = {};
+
+    if (materials.length === 0) {
+      container.innerHTML = `<p style="grid-column: 1/-1; color: #94a3b8; text-align: center; padding: 2rem;">No study materials uploaded for this subject yet.</p>`;
+      return;
+    }
+
+    materials.forEach(m => { this.materialsMap[m.id] = m; });
+
+    container.innerHTML = materials.map(m => `
+      <div class="material-card">
+        <div>
+          <span class="mat-badge">Chapter ${m.chapter_no}: ${m.chapter_name || 'Notes'}</span>
+          <h4 class="mat-title">${m.title}</h4>
+          <p class="mat-desc">${m.description || 'Verified lecture notes and formula breakdown.'}</p>
+        </div>
+        <div>
+          <div class="mat-meta">
+            <span>✍️ ${m.author || 'GTU Faculty'}</span>
+            <span>💾 ${m.file_size || '3.2 MB'} • 🔒 Read-Only</span>
+          </div>
+          <div class="mat-actions">
+            <button class="btn btn-primary btn-sm" style="width: 100%;" onclick="StudentApp.openMaterialViewer(${m.id})">
+              👁️ Read Notes (In-Browser)
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  },
+
+  openMaterialViewer(id) {
+    const m = this.materialsMap[id];
+    if (!m) return;
+    DocViewer.open(m.title, 'notes_text', m.description, {
+      author: m.author,
+      file_size: m.file_size,
+      file_url: m.file_url,
+      description: `${m.title}\n\n${m.description || 'Detailed GTU Diploma lecture notes with core theoretical definitions, formulas, and examination oriented diagrams.'}`
+    });
+  },
+
+  renderBooks(books) {
+    const container = document.getElementById('studentResourceGrid');
+    this.booksMap = {};
+
+    if (books.length === 0) {
+      container.innerHTML = `<p style="grid-column: 1/-1; color: #94a3b8; text-align: center; padding: 2rem;">No textbooks listed for this subject yet.</p>`;
+      return;
+    }
+
+    books.forEach(b => { this.booksMap[b.id] = b; });
+
+    container.innerHTML = books.map(b => `
+      <div class="book-card">
+        <img src="${b.cover_image || 'https://images.unsplash.com/photo-1532012164546-f432f2e3edd4?w=400&q=80'}" alt="${b.title}" class="book-cover">
+        <div class="book-info">
+          <div>
+            <h4 class="book-title">${b.title}</h4>
+            <p class="book-author">By ${b.author}</p>
+            <p class="book-meta">${b.publisher} • ⭐ ${b.rating}</p>
+          </div>
+          <div style="margin-top: 0.75rem;">
+            <button class="btn btn-primary btn-sm" style="width: 100%;" onclick="StudentApp.openBookViewer(${b.id})">
+              📖 Read Textbook (Read-Only Mode)
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  },
+
+  openBookViewer(id) {
+    const b = this.booksMap[id];
+    if (!b) return;
+    DocViewer.open(b.title, 'book', b.file_url, {
+      publisher: b.publisher,
+      author: b.author,
+      file_size: b.file_size,
+      description: `GTU Prescribed Reference Book (${b.edition || 'Latest Revised Edition'}) by ${b.author}. Published by ${b.publisher}. Contains complete syllabus units and chapter exercises in digital reading mode.`
+    });
+  },
+
+  renderQuestions(questions) {
+    const container = document.getElementById('studentResourceGrid');
+    this.questionsMap = {};
+
+    if (questions.length === 0) {
+      container.innerHTML = `<p style="grid-column: 1/-1; color: #94a3b8; text-align: center; padding: 2rem;">No question papers found for this subject.</p>`;
+      return;
+    }
+
+    questions.forEach(q => { this.questionsMap[q.id] = q; });
+
+    container.innerHTML = questions.map(q => `
+      <div class="qb-card">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <span class="qb-season-badge">${q.exam_season} ${q.exam_year}</span>
+            <span class="qb-marks-badge">${q.total_marks} Marks</span>
+          </div>
+          <h4 class="mat-title">${q.title}</h4>
+          <p class="mat-desc">${q.description || 'GTU Official End-Semester Examination Question Paper.'}</p>
+        </div>
+        <div>
+          <div class="mat-meta">
+            <span>📋 ${q.questions_count || 14} Questions</span>
+            <span>📑 ${q.paper_type || 'GTU Paper'}</span>
+          </div>
+          <div class="mat-actions">
+            <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="StudentApp.openQuestionViewer(${q.id})">
+              📄 Read Question Paper
+            </button>
+            <button class="btn btn-success btn-sm" onclick="StudentApp.switchResourceTab('solutions')">
+              💡 Read Solutions
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  },
+
+  openQuestionViewer(id) {
+    const q = this.questionsMap[id];
+    if (!q) return;
+    DocViewer.open(q.title, 'paper', q.file_url, {
+      description: q.description || `Official Gujarat Technological University (GTU) ${q.exam_season} ${q.exam_year} Examination Paper for semester assessment (Total: ${q.total_marks} Marks).`
+    });
+  },
+
+  renderSolutions(solutions) {
+    const container = document.getElementById('studentResourceGrid');
+    this.solutionsMap = {};
+
+    if (solutions.length === 0) {
+      container.innerHTML = `<p style="grid-column: 1/-1; color: #94a3b8; text-align: center; padding: 2rem;">No solved papers available for this subject yet.</p>`;
+      return;
+    }
+
+    solutions.forEach(s => { this.solutionsMap[s.id] = s; });
+
+    container.innerHTML = solutions.map(s => `
+      <div class="material-card" style="border-color: rgba(16, 185, 129, 0.3);">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span class="qb-season-badge">SOLVED: ${s.exam_year} ${s.paper_season || 'Winter'}</span>
+            <span style="font-size: 0.75rem; color: #34d399; font-weight: 600;">⭐ Step-by-Step</span>
+          </div>
+          <h4 class="mat-title">${s.title}</h4>
+          <p class="mat-desc">Verified by: ${s.verified_by || 'GTU Gold Medalist & Faculty'}</p>
+        </div>
+        <div>
+          <div style="background: rgba(10,15,29,0.6); padding: 0.6rem; border-radius: 6px; font-size: 0.8rem; color: #94a3b8; margin-bottom: 1rem;">
+            Key Formula: <code style="color: #38bdf8;">${s.key_formulas || 'Standard formulas included'}</code>
+          </div>
+          <div class="mat-actions">
+            <button class="btn btn-success btn-sm" style="flex: 1;" onclick="StudentApp.openSolutionViewer(${s.id})">
+              📖 Read Solved Answers
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="StudentApp.askSolutionDoubt(${s.id})">
+              ✨ AI Explain
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  },
+
+  openSolutionViewer(id) {
+    const s = this.solutionsMap[id];
+    if (!s) return;
+    DocViewer.open(s.title, 'solution', s.solution_content, {
+      verified_by: s.verified_by,
+      key_formulas: s.key_formulas,
+      file_url: s.file_url
+    });
+  },
+
+  askSolutionDoubt(id) {
+    const s = this.solutionsMap[id];
+    if (!s) return;
+    AiTutor.open(s.subject_name || 'Engineering', `Explain step-by-step: ${s.title}`);
+  },
+
+  async loadAnnouncements() {
+    const res = await API.getAnnouncements();
+    if (res.success && res.data && res.data.length > 0) {
+      const tickerElem = document.getElementById('studentNoticeTicker');
+      if (tickerElem) {
+        tickerElem.innerHTML = res.data.map(a => `
+          <span class="ticker-item">
+            <strong style="color: #38bdf8;">[${a.category}]</strong> ${a.title}
+          </span>
+        `).join(' &nbsp; • &nbsp; ');
+      }
+    }
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  StudentApp.init();
+});

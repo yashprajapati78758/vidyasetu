@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VidyaSetu - GTU Diploma Study Materials, Solved Papers & AI Guru</title>
+  <meta name="description" content="Gujarat's dedicated digital learning portal for GTU Diploma engineering students. Access semester-wise study materials, reference textbooks, GTU question banks, verified step-by-step solutions, progress tracking, and AI Doubt Guru.">
+  
+  <!-- Favicon & Fonts -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+  <!-- 1. Top Navigation Bar (Student Dedicated) -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="brand-logo" onclick="StudentApp.switchTab('home')" style="cursor: pointer;">
+        <div class="logo-badge">🎓</div>
+        <span>VidyaSetu</span>
+        <span class="brand-tag">STUDENT PORTAL</span>
+      </div>
+
+      <ul class="nav-links">
+        <li class="nav-item active" data-tab="home" onclick="StudentApp.switchTab('home')">
+          <span>🏠</span> Home
+        </li>
+        <li class="nav-item" data-tab="progress" onclick="StudentApp.switchTab('progress')">
+          <span>📈</span> My Progress
+        </li>
+        <li class="nav-item" data-tab="ai-guru" onclick="AiTutor.open()">
+          <span>✨</span> AI Doubt Guru
+        </li>
+      </ul>
+
+      <div class="nav-actions">
+        <!-- Student Profile Pill -->
+        <div style="display: flex; align-items: center; gap: 0.6rem; background: rgba(18,26,45,0.8); border: 1px solid var(--bg-glass-border); padding: 4px 12px 4px 6px; border-radius: var(--radius-full);">
+          <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&q=80" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" alt="Student">
+          <div style="line-height: 1.2;">
+            <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">Yash Patel</div>
+            <div style="font-size: 0.68rem; color: #38bdf8;">CE • Sem 3</div>
+          </div>
+        </div>
+
+        <a href="/admin" class="btn btn-secondary btn-sm" style="font-size: 0.78rem;">
+          <span>⚙️</span> Admin Login
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 2. GTU Notice Ticker -->
+  <div class="ticker-wrap">
+    <span class="ticker-badge">GTU NOTICE</span>
+    <div class="ticker-content" id="studentNoticeTicker">
+      <span class="ticker-item">📢 Loading GTU official circulars and examination updates...</span>
+    </div>
+  </div>
+
+  <!-- 3. Main Student Content Container -->
+  <main class="main-wrapper">
+
+    <!-- SECTION A: HOME & EXPLORER -->
+    <section id="homeSection">
+      <!-- Hero Banner -->
+      <div class="hero-banner">
+        <div class="hero-glow-blob"></div>
+        <div class="hero-content">
+          <div class="hero-pill">
+            <span>🚀</span> Gujarat Technological University (GTU) Diploma Curriculum
+          </div>
+          <h1 class="hero-title">
+            Your Ultimate <span>GTU Diploma</span> Study Companion.
+          </h1>
+          <p class="hero-subtitle">
+            Instant access to semester-wise chapter notes, reference textbooks, GTU past question banks, gold-medalist step-by-step solutions, and 24/7 AI academic doubt solver.
+          </p>
+
+          <!-- Quick Global Search Box -->
+          <div class="hero-search-box">
+            <span style="font-size: 1.2rem; color: #38bdf8;">🔍</span>
+            <input type="text" id="studentGlobalSearch" class="hero-search-input" placeholder="Search subjects, codes (e.g. 4330701), chapters, or topics...">
+            <button class="btn btn-primary btn-sm" onclick="StudentApp.loadSubjects(document.getElementById('studentGlobalSearch').value)">
+              Search
+            </button>
+          </div>
+
+          <!-- Hero Metrics -->
+          <div class="hero-stats">
+            <div class="stat-item">
+              <h4>100+</h4>
+              <p>Chapter Lecture Notes</p>
+            </div>
+            <div class="stat-item">
+              <h4>50+</h4>
+              <p>GTU Prescribed Books</p>
+            </div>
+            <div class="stat-item">
+              <h4>2020-2024</h4>
+              <p>Solved Question Banks</p>
+            </div>
+            <div class="stat-item">
+              <h4 style="color: #38bdf8;">24/7</h4>
+              <p>AI Doubt Solver</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1. Select Diploma Branch -->
+      <div class="section-header">
+        <div>
+          <h2><span>🏛️</span> Select Engineering Branch</h2>
+          <p>Choose your diploma engineering branch to view semester subjects</p>
+        </div>
+      </div>
+      <div class="branch-grid" id="studentBranchGrid">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- 2. Select Semester & GTU Scheme -->
+      <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h2><span>📅</span> Select Semester & GTU Scheme</h2>
+          <p>Organized semester-wise for GTU Diploma New Scheme (43-Series) and Old Scheme (33-Series)</p>
+        </div>
+
+        <!-- GTU Teaching Scheme Switcher -->
+        <div class="scheme-switcher-tabs" id="studentSchemeTabs">
+          <button class="scheme-tab-btn active" data-scheme="new" onclick="StudentApp.selectScheme('new')">
+            🌟 New Scheme (43-Series)
+          </button>
+          <button class="scheme-tab-btn" data-scheme="old" onclick="StudentApp.selectScheme('old')">
+            📜 Old Scheme (33-Series)
+          </button>
+          <button class="scheme-tab-btn" data-scheme="all" onclick="StudentApp.selectScheme('all')">
+            ⚡ All Schemes
+          </button>
+        </div>
+      </div>
+      <div class="sem-tabs">
+        <button class="sem-tab-btn" data-sem="1" onclick="StudentApp.selectSemester(1)">📘 Semester 1</button>
+        <button class="sem-tab-btn" data-sem="2" onclick="StudentApp.selectSemester(2)">📙 Semester 2</button>
+        <button class="sem-tab-btn active" data-sem="3" onclick="StudentApp.selectSemester(3)">📗 Semester 3</button>
+        <button class="sem-tab-btn" data-sem="4" onclick="StudentApp.selectSemester(4)">📕 Semester 4</button>
+        <button class="sem-tab-btn" data-sem="5" onclick="StudentApp.selectSemester(5)">📓 Semester 5</button>
+        <button class="sem-tab-btn" data-sem="6" onclick="StudentApp.selectSemester(6)">🎓 Semester 6</button>
+      </div>
+
+      <!-- 3. Subjects Grid -->
+      <div class="section-header">
+        <div>
+          <h2><span>📚</span> Semester Subjects & Resource Directory</h2>
+          <p>Click "Open Subject Hub" to access chapter notes, textbooks, question papers & solved solutions</p>
+        </div>
+      </div>
+      <div class="subject-grid" id="studentSubjectsGrid">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- SECTION B: SUBJECT RESOURCE HUB (Detail View) -->
+    <section id="subjectHubSection" style="display: none;">
+      <button class="btn btn-secondary btn-sm" style="margin-bottom: 1.5rem;" onclick="StudentApp.switchTab('home')">
+        ← Back to All Subjects
+      </button>
+
+      <div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem; border-color: rgba(56, 189, 248, 0.3);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+              <span class="subject-code-badge" id="hubSubjectCode">GTU Code: 4330701</span>
+              <span style="font-size: 0.85rem; color: #38bdf8;" id="hubSubjectBranch">Computer Engineering • Semester 3</span>
+            </div>
+            <h1 style="font-size: 2rem; color: #fff;" id="hubSubjectTitle">Data Structures & Algorithms</h1>
+            <p style="color: var(--text-secondary); margin-top: 0.5rem; max-width: 800px;" id="hubSubjectDesc">
+              Comprehensive GTU lecture notes, textbook references, past question papers, and verified step-by-step solutions.
+            </p>
+          </div>
+          <button class="btn btn-primary" onclick="AiTutor.open(document.getElementById('hubSubjectTitle').textContent)">
+            ✨ Ask Subject Doubt (AI Guru)
+          </button>
+        </div>
+      </div>
+
+      <!-- Resource Navigation Tabs (Materials, Books, Question Bank, Solutions) -->
+      <div class="resource-nav">
+        <button class="resource-tab-btn active" data-tab="materials" onclick="StudentApp.switchResourceTab('materials')">
+          📑 Study Materials & Notes
+        </button>
+        <button class="resource-tab-btn" data-tab="books" onclick="StudentApp.switchResourceTab('books')">
+          📚 GTU Textbooks & Reference
+        </button>
+        <button class="resource-tab-btn" data-tab="questions" onclick="StudentApp.switchResourceTab('questions')">
+          ❓ GTU Question Bank
+        </button>
+        <button class="resource-tab-btn" data-tab="solutions" onclick="StudentApp.switchResourceTab('solutions')">
+          💡 Solved Paper Guides
+        </button>
+      </div>
+
+      <!-- Resource Content Grid -->
+      <div class="resource-grid" id="studentResourceGrid">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- SECTION C: STUDENT PROGRESS TRACKER -->
+    <section id="progressSection" style="display: none;">
+      <div class="section-header">
+        <div>
+          <h2><span>📈</span> Student Learning & Exam Readiness Tracker</h2>
+          <p>Track syllabus completion %, check off mastered topics, and prepare for GTU end-semester exams</p>
+        </div>
+      </div>
+
+      <div class="progress-dashboard">
+        <!-- Left Summary Card -->
+        <div class="progress-summary-card">
+          <span style="background: rgba(56,189,248,0.15); color: #38bdf8; padding: 4px 12px; border-radius: var(--radius-full); font-size: 0.8rem; font-weight: 700;">
+            SEMESTER READINESS
+          </span>
+
+          <!-- Circular Gauge -->
+          <div class="progress-circle-wrap">
+            <svg class="progress-circle-svg" viewBox="0 0 160 160">
+              <defs>
+                <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#38bdf8" />
+                  <stop offset="100%" stop-color="#6366f1" />
+                </linearGradient>
+              </defs>
+              <circle class="progress-circle-bg" cx="80" cy="80" r="70"></circle>
+              <circle class="progress-circle-fill" id="progressCircleFill" cx="80" cy="80" r="70" stroke-dasharray="440" stroke-dashoffset="150"></circle>
+            </svg>
+            <div class="progress-percentage-text" id="overallProgressPct">68%</div>
+          </div>
+
+          <h3 style="font-size: 1.3rem; color: #fff; margin-bottom: 0.25rem;">Semester Progress</h3>
+          <p style="color: #94a3b8; font-size: 0.88rem;" id="progressCompletedCount">14 of 24 Topics Mastered</p>
+
+          <div style="width: 100%; margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-around;">
+            <div>
+              <div style="font-size: 1.4rem; font-weight: 800; color: #f59e0b;">🔥 7 Days</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">Study Streak</div>
+            </div>
+            <div>
+              <div style="font-size: 1.4rem; font-weight: 800; color: #10b981;">🎯 45 Days</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">Until GTU Exam</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Topic Checklists -->
+        <div id="subjectChecklistContainer">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 4. Floating AI Guru Button -->
+  <button class="floating-ai-btn" onclick="AiTutor.open()">
+    <span>✨</span>
+    <span>Ask AI Guru</span>
+  </button>
+
+  <!-- ==========================================
+       MODAL 1: VIDYASETU AI GURU (DOUBT SOLVER)
+       ========================================== -->
+  <div class="ai-modal-overlay" id="aiModalOverlay">
+    <div class="ai-modal-container">
+      <div class="ai-chat-header">
+        <div class="ai-header-left">
+          <div class="ai-guru-avatar">✨</div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <h3 style="color: #fff; font-size: 1.15rem;">VidyaSetu AI Guru</h3>
+              <span style="background: rgba(16,185,129,0.2); color: #34d399; font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; font-weight: 700;">GTU SOLVER</span>
+            </div>
+            <p style="color: #94a3b8; font-size: 0.78rem;" id="aiSubjectBadge">Data Structures & Algorithms</p>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="AiTutor.close()">✕ Close</button>
+      </div>
+
+      <div class="ai-chat-messages" id="aiChatMessages">
+        <div class="chat-bubble assistant">
+          <p><strong>Namaste! 🙏 I am your VidyaSetu AI Study Assistant.</strong></p>
+          <p style="margin-top: 0.4rem;">
+            Ask me any GTU Diploma problem, mathematical equation, C/Python/Java programming logic, circuit explanation, or 7-mark question answering template.
+          </p>
+        </div>
+      </div>
+
+      <div class="quick-prompts-bar">
+        <button class="prompt-chip" onclick="AiTutor.usePrompt('Explain Infix to Postfix conversion using Stack with step table')">
+          📑 Infix to Postfix Tracing
+        </button>
+        <button class="prompt-chip" onclick="AiTutor.usePrompt('Explain AVL Tree 4 types of rotations with diagrams')">
+          🌳 AVL Tree Rotations
+        </button>
+        <button class="prompt-chip" onclick="AiTutor.usePrompt('Calculate Average Waiting Time in Round Robin CPU Scheduling')">
+          ⚡ Round Robin Scheduling
+        </button>
+        <button class="prompt-chip" onclick="AiTutor.usePrompt('Explain Pointers in C with memory address swap example')">
+          💻 C Pointers & Memory
+        </button>
+        <button class="prompt-chip" onclick="AiTutor.usePrompt('Find Matrix Inverse using Gauss Jordan method step by step')">
+          📐 Matrix Inverse Solver
+        </button>
+      </div>
+
+      <div class="ai-input-bar">
+        <input type="text" id="aiChatInput" placeholder="Type your GTU engineering problem or doubt here..." autofocus>
+        <button class="btn btn-primary" id="aiSendBtn">
+          <span>🚀 Solve</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 2: IN-BROWSER DOCUMENT & PDF VIEWER
+       ========================================== -->
+  <div class="viewer-modal-overlay" id="viewerModalOverlay">
+    <div class="viewer-container">
+      <div class="viewer-toolbar">
+        <div>
+          <span style="background: rgba(56,189,248,0.2); color: #38bdf8; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;" id="viewerTypeBadge">PDF</span>
+          <strong style="color: #fff; margin-left: 0.5rem;" id="viewerTitle">Document Title</strong>
+          <span style="color: #94a3b8; font-size: 0.8rem; margin-left: 0.5rem;" id="viewerMetaText">Author / Faculty</span>
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button class="btn btn-secondary btn-sm" onclick="DocViewer.zoomOut()">🔍 -</button>
+          <span style="color: #cbd5e1; font-size: 0.85rem;" id="viewerZoomLevel">100%</span>
+          <button class="btn btn-secondary btn-sm" onclick="DocViewer.zoomIn()">🔍 +</button>
+          <button class="btn btn-secondary btn-sm" onclick="DocViewer.resetZoom()">Reset</button>
+          <button class="btn btn-secondary btn-sm" onclick="DocViewer.close()">✕</button>
+        </div>
+      </div>
+
+      <div class="viewer-content" id="viewerDocContent">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Student Footer -->
+  <footer style="background: rgba(10,15,29,0.9); border-top: 1px solid var(--bg-glass-border); padding: 2.5rem 1.5rem; margin-top: 4rem; text-align: center;">
+    <div style="max-width: var(--max-width); margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div style="text-align: left;">
+        <h4 style="color: #fff; font-size: 1.1rem;">🎓 VidyaSetu Platform</h4>
+        <p style="color: var(--text-muted); font-size: 0.85rem;">Gujarat Technological University (GTU) Diploma Digital Repository</p>
+      </div>
+      <div style="display: flex; gap: 1.5rem; font-size: 0.88rem;">
+        <a href="#homeSection" onclick="StudentApp.switchTab('home')">Home</a>
+        <a href="#progressSection" onclick="StudentApp.switchTab('progress')">My Progress</a>
+        <a href="#" onclick="AiTutor.open()">AI Doubt Guru</a>
+        <a href="/admin" style="color: #fbbf24; font-weight: 600;">Faculty / Admin Login →</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/viewer.js"></script>
+  <script src="js/ai-tutor.js"></script>
+  <script src="js/progress.js"></script>
+  <script src="js/student-app.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VidyaSetu Admin Portal - GTU Diploma Management & Analytics</title>
+  
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚙️</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+
+  <!-- 1. ADMIN AUTHENTICATION GATE -->
+  <div class="admin-auth-overlay" id="adminAuthOverlay">
+    <div class="auth-card">
+      <div class="auth-logo">⚙️</div>
+      <h2 class="auth-title">VidyaSetu Admin</h2>
+      <p class="auth-desc">Gujarat Technological University (GTU) Diploma Portal Management</p>
+
+      <div class="demo-credentials-box">
+        <strong>Demo Admin Credentials:</strong><br>
+        Username: <code style="color: #fff;">admin</code> | Password: <code style="color: #fff;">admin123</code>
+      </div>
+
+      <form onsubmit="AdminApp.handleLogin(event)">
+        <div class="form-group" style="margin-bottom: 1rem; text-align: left;">
+          <label>Admin Username</label>
+          <input type="text" id="authUsername" class="form-control" value="admin" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem; text-align: left;">
+          <label>Security Password</label>
+          <input type="password" id="authPassword" class="form-control" value="admin123" required>
+        </div>
+        <button type="submit" class="btn btn-warning" style="width: 100%; padding: 0.85rem; font-size: 1rem;">
+          🔐 Secure Admin Login
+        </button>
+      </form>
+
+      <div style="margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1rem;">
+        <a href="/" style="font-size: 0.85rem; color: #38bdf8;">← Back to Student Website</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. DEDICATED LEFT SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div>
+      <div class="sidebar-brand">
+        <div class="brand-icon-admin">⚙️</div>
+        <div>
+          <h3 style="font-size: 1.15rem; color: #fff; line-height: 1.2;">VidyaSetu</h3>
+          <span style="font-size: 0.72rem; color: #fbbf24; font-weight: 700; letter-spacing: 0.5px;">ADMIN PANEL</span>
+        </div>
+      </div>
+
+      <ul class="sidebar-menu">
+        <li class="menu-item active" data-tab="overview" onclick="AdminApp.switchTab('overview')">
+          <span>📊</span> <span>Overview & Stats</span>
+        </li>
+        <li class="menu-item" data-tab="materials" onclick="AdminApp.switchTab('materials')">
+          <span>📄</span> <span>Study Materials</span>
+        </li>
+        <li class="menu-item" data-tab="books" onclick="AdminApp.switchTab('books')">
+          <span>📚</span> <span>GTU Textbooks</span>
+        </li>
+        <li class="menu-item" data-tab="questions" onclick="AdminApp.switchTab('questions')">
+          <span>❓</span> <span>Question Banks</span>
+        </li>
+        <li class="menu-item" data-tab="solutions" onclick="AdminApp.switchTab('solutions')">
+          <span>💡</span> <span>Solved Guides</span>
+        </li>
+        <li class="menu-item" data-tab="subjects" onclick="AdminApp.switchTab('subjects')">
+          <span>🏛️</span> <span>GTU Subjects</span>
+        </li>
+        <li class="menu-item" data-tab="students" onclick="AdminApp.switchTab('students')">
+          <span>👨‍🎓</span> <span>Students Progress</span>
+        </li>
+        <li class="menu-item" data-tab="ai-logs" onclick="AdminApp.switchTab('ai-logs')">
+          <span>🤖</span> <span>AI Doubt Monitor</span>
+        </li>
+        <li class="menu-item" data-tab="announcements" onclick="AdminApp.switchTab('announcements')">
+          <span>📢</span> <span>GTU Circulars</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="sidebar-footer">
+      <a href="/" target="_blank" class="btn btn-secondary btn-sm" style="width: 100%;">
+        <span>🌐</span> <span>View Student Site</span>
+      </a>
+      <button class="btn btn-danger btn-sm" onclick="AdminApp.logout()" style="width: 100%;">
+        <span>🚪</span> <span>Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- 3. MAIN ADMIN CONTENT WORKSPACE -->
+  <div class="admin-main-content">
+    
+    <!-- Top Header Bar -->
+    <header class="admin-topbar">
+      <div class="admin-topbar-left">
+        <h2 id="adminHeaderTitle">System Overview & Analytics</h2>
+      </div>
+
+      <div class="admin-topbar-right">
+        <div class="admin-user-pill">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80" class="admin-avatar" alt="Admin">
+          <span style="font-size: 0.85rem; font-weight: 600; color: #fff;">GTU Administrator</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Admin Page Container -->
+    <div class="admin-page-container">
+
+      <!-- SECTION 1: OVERVIEW & STATS -->
+      <section id="section-overview" class="admin-section active">
+        <!-- Live Metrics Cards -->
+        <div class="metrics-row">
+          <div class="metric-box">
+            <div class="metric-icon-wrap" style="background: rgba(56,189,248,0.15); color: #38bdf8;">📄</div>
+            <div>
+              <div class="metric-val" id="statMatCount">15</div>
+              <div class="metric-lbl">Study Materials</div>
+            </div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-icon-wrap" style="background: rgba(245,158,11,0.15); color: #f59e0b;">📚</div>
+            <div>
+              <div class="metric-val" id="statBookCount">10</div>
+              <div class="metric-lbl">GTU Textbooks</div>
+            </div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-icon-wrap" style="background: rgba(16,185,129,0.15); color: #10b981;">❓</div>
+            <div>
+              <div class="metric-val" id="statPaperCount">12</div>
+              <div class="metric-lbl">Question Banks</div>
+            </div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-icon-wrap" style="background: rgba(99,102,241,0.15); color: #818cf8;">💡</div>
+            <div>
+              <div class="metric-val" id="statSolCount">4</div>
+              <div class="metric-lbl">Solved Paper Guides</div>
+            </div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-icon-wrap" style="background: rgba(168,85,247,0.15); color: #c084fc;">🏛️</div>
+            <div>
+              <div class="metric-val" id="statSubCount">20</div>
+              <div class="metric-lbl">GTU Subjects</div>
+            </div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-icon-wrap" style="background: rgba(34,197,94,0.15); color: #4ade80;">👨‍🎓</div>
+            <div>
+              <div class="metric-val" id="statStudCount">1</div>
+              <div class="metric-lbl">Registered Students</div>
+            </div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-icon-wrap" style="background: rgba(236,72,153,0.15); color: #f472b6;">🤖</div>
+            <div>
+              <div class="metric-val" id="statAiCount">12</div>
+              <div class="metric-lbl">AI Doubts Solved</div>
+            </div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-icon-wrap" style="background: rgba(6,182,212,0.15); color: #06b6d4;">📥</div>
+            <div>
+              <div class="metric-val" id="statDownCount">58,340</div>
+              <div class="metric-lbl">Total Downloads</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Branch Distribution Overview -->
+        <div class="table-card" style="margin-top: 2rem;">
+          <div style="padding: 1.25rem 1.5rem; background: rgba(10,14,26,0.9); border-bottom: 1px solid var(--admin-card-border); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="color: #fff; font-size: 1.15rem;">🏛️ GTU Diploma Engineering Branches Resource Distribution</h3>
+            <button class="btn btn-primary btn-sm" onclick="AdminApp.switchTab('subjects')">Manage Curriculum</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Branch Name</th>
+                <th>Branch Code</th>
+                <th>Subjects</th>
+                <th>Materials</th>
+                <th>Books</th>
+                <th>Question Banks</th>
+              </tr>
+            </thead>
+            <tbody id="overviewBranchStats">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 2: STUDY MATERIALS -->
+      <section id="section-materials" class="admin-section">
+        <div class="admin-toolbar">
+          <div class="toolbar-search">
+            <span>🔍</span>
+            <input type="text" id="adminSearchInput" oninput="AdminApp.handleSearch(event)" placeholder="Search notes, chapters, or author...">
+          </div>
+          <button class="btn btn-primary" onclick="AdminApp.openModal('materialModal')">
+            ➕ Upload Study Material
+          </button>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Subject</th>
+                <th>Chapter / Topic</th>
+                <th>Size</th>
+                <th>Downloads</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="materialsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 3: GTU TEXTBOOKS -->
+      <section id="section-books" class="admin-section">
+        <div class="admin-toolbar">
+          <div class="toolbar-search">
+            <span>🔍</span>
+            <input type="text" oninput="AdminApp.handleSearch(event)" placeholder="Search books by title, author...">
+          </div>
+          <button class="btn btn-primary" onclick="AdminApp.openModal('bookModal')">
+            ➕ Add GTU Textbook
+          </button>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Cover</th>
+                <th>Book Title</th>
+                <th>Author</th>
+                <th>Publisher</th>
+                <th>Subject</th>
+                <th>Rating</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="booksTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 4: QUESTION BANKS -->
+      <section id="section-questions" class="admin-section">
+        <div class="admin-toolbar">
+          <div class="toolbar-search">
+            <span>🔍</span>
+            <input type="text" oninput="AdminApp.handleSearch(event)" placeholder="Search papers by year, season...">
+          </div>
+          <button class="btn btn-primary" onclick="AdminApp.openModal('questionModal')">
+            ➕ Add Question Paper
+          </button>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Exam Session</th>
+                <th>Title</th>
+                <th>Subject</th>
+                <th>Total Marks</th>
+                <th>Questions</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="questionsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 5: SOLVED PAPER GUIDES -->
+      <section id="section-solutions" class="admin-section">
+        <div class="admin-toolbar">
+          <div class="toolbar-search">
+            <span>🔍</span>
+            <input type="text" oninput="AdminApp.handleSearch(event)" placeholder="Search solved guides...">
+          </div>
+          <button class="btn btn-success" onclick="AdminApp.openModal('solutionModal')">
+            ➕ Publish Solved Guide
+          </button>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Solution Title</th>
+                <th>Subject</th>
+                <th>Exam Year / Session</th>
+                <th>Verified By</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="solutionsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 6: GTU SUBJECTS DIRECTORY -->
+      <section id="section-subjects" class="admin-section">
+        <!-- Semester Quick Navigation Tabs -->
+        <div class="admin-sem-nav" id="adminSemTabs">
+          <button class="admin-sem-pill active" data-sem="all" onclick="AdminApp.selectAdminSemester('all')">
+            ⚡ All Semesters
+          </button>
+          <button class="admin-sem-pill" data-sem="1" onclick="AdminApp.selectAdminSemester(1)">
+            📘 Semester 1
+          </button>
+          <button class="admin-sem-pill" data-sem="2" onclick="AdminApp.selectAdminSemester(2)">
+            📙 Semester 2
+          </button>
+          <button class="admin-sem-pill" data-sem="3" onclick="AdminApp.selectAdminSemester(3)">
+            📗 Semester 3
+          </button>
+          <button class="admin-sem-pill" data-sem="4" onclick="AdminApp.selectAdminSemester(4)">
+            📕 Semester 4
+          </button>
+          <button class="admin-sem-pill" data-sem="5" onclick="AdminApp.selectAdminSemester(5)">
+            📓 Semester 5
+          </button>
+          <button class="admin-sem-pill" data-sem="6" onclick="AdminApp.selectAdminSemester(6)">
+            🎓 Semester 6
+          </button>
+        </div>
+
+        <!-- Semester Summary / Info Banner -->
+        <div class="admin-sem-summary-banner">
+          <div>
+            <h4 style="color: #fff; font-size: 0.95rem;" id="adminSemSummaryTitle">🏛️ All GTU Diploma Subjects Directory</h4>
+            <p style="color: #94a3b8; font-size: 0.8rem;" id="adminSemSummaryDesc">Organized semester-wise across all 7 engineering branches in database</p>
+          </div>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span class="badge-tag badge-blue" id="adminSubjectTotalCount">Total: 218 Subjects</span>
+            <button class="btn btn-primary btn-sm" onclick="AdminApp.openSubjectModalWithSem()">
+              ➕ Add Subject to Semester
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-toolbar" style="flex-wrap: wrap; gap: 0.75rem;">
+          <div class="toolbar-search" style="min-width: 220px; flex: 1;">
+            <span>🔍</span>
+            <input type="text" id="adminSubjectSearchInput" oninput="AdminApp.handleSubjectSearch(event)" placeholder="Search code (4330701 / 3330704), subject name...">
+          </div>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+            <select id="adminSubjectBranchFilter" class="form-control" style="width: auto; padding: 0.45rem 0.8rem; font-size: 0.85rem;" onchange="AdminApp.loadSubjects()">
+              <option value="all">All Branches</option>
+              <option value="ce">Computer (07)</option>
+              <option value="it">Information Tech (16)</option>
+              <option value="me">Mechanical (19)</option>
+              <option value="cl">Civil (06)</option>
+              <option value="ee">Electrical (09)</option>
+              <option value="ec">EC (11)</option>
+              <option value="ae">Automobile (02)</option>
+            </select>
+            <select id="adminSubjectSemFilter" class="form-control" style="width: auto; padding: 0.45rem 0.8rem; font-size: 0.85rem;" onchange="AdminApp.handleSemDropdownChange()">
+              <option value="all">All Semesters (1-6)</option>
+              <option value="1">Semester 1</option>
+              <option value="2">Semester 2</option>
+              <option value="3">Semester 3</option>
+              <option value="4">Semester 4</option>
+              <option value="5">Semester 5</option>
+              <option value="6">Semester 6</option>
+            </select>
+            <select id="adminSubjectSchemeFilter" class="form-control" style="width: auto; padding: 0.45rem 0.8rem; font-size: 0.85rem;" onchange="AdminApp.loadSubjects()">
+              <option value="all">All Schemes</option>
+              <option value="new">🌟 New Scheme (43-Series)</option>
+              <option value="old">📜 Old Scheme (33-Series)</option>
+            </select>
+            <button class="btn btn-primary" onclick="AdminApp.openSubjectModalWithSem()">
+              ➕ Add GTU Subject
+            </button>
+          </div>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Scheme</th>
+                <th>Subject Name</th>
+                <th>Branch</th>
+                <th>Semester</th>
+                <th>Credits</th>
+                <th>Category</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="subjectsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 7: REGISTERED STUDENTS & PROGRESS -->
+      <section id="section-students" class="admin-section">
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Student Name</th>
+                <th>Enrollment No</th>
+                <th>Email</th>
+                <th>Branch & Semester</th>
+                <th>Syllabus Progress</th>
+                <th>Joined Date</th>
+              </tr>
+            </thead>
+            <tbody id="studentsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 8: AI DOUBT GURU LOGS -->
+      <section id="section-ai-logs" class="admin-section">
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Log ID</th>
+                <th>Subject Area</th>
+                <th>Student Query / Doubt</th>
+                <th>Category</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="aiLogsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 9: ANNOUNCEMENTS & CIRCULARS -->
+      <section id="section-announcements" class="admin-section">
+        <div class="admin-toolbar">
+          <div class="toolbar-search">
+            <span>🔍</span>
+            <input type="text" oninput="AdminApp.handleSearch(event)" placeholder="Search circulars...">
+          </div>
+          <button class="btn btn-warning" onclick="AdminApp.openModal('announcementModal')">
+            ➕ Broadcast Notice
+          </button>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Notice Title</th>
+                <th>Pinned Status</th>
+                <th>Published Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="announcementsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- ==========================================
+       CRUD MODALS FOR ADMIN OPERATIONS
+       ========================================== -->
+
+  <!-- Modal A: Add Material -->
+  <div class="crud-modal-overlay" id="materialModal">
+    <div class="crud-modal-box">
+      <div class="crud-modal-header">
+        <h3 style="color: #fff;">Upload Study Material</h3>
+        <button class="btn btn-secondary btn-sm" onclick="AdminApp.closeModal('materialModal')">✕</button>
+      </div>
+      <form class="crud-modal-body" onsubmit="AdminApp.handleCreateMaterial(event)">
+        <!-- Quick Branch & Semester Filters for Subject Selection -->
+        <div class="form-row" style="margin-bottom: 0.5rem; background: rgba(10,15,29,0.5); padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid var(--admin-card-border);">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 0.78rem; color: #94a3b8;">Filter Branch</label>
+            <select id="filterMaterialBranch" class="form-control" style="padding: 0.35rem 0.6rem; font-size: 0.82rem;" onchange="AdminApp.filterModalSubjects('material')">
+              <option value="all">All Branches</option>
+              <option value="ce">Computer (07)</option>
+              <option value="it">IT (16)</option>
+              <option value="me">Mechanical (19)</option>
+              <option value="cl">Civil (06)</option>
+              <option value="ee">Electrical (09)</option>
+              <option value="ec">EC (11)</option>
+              <option value="ae">Automobile (02)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 0.78rem; color: #94a3b8;">Filter Semester</label>
+            <select id="filterMaterialSem" class="form-control" style="padding: 0.35rem 0.6rem; font-size: 0.82rem;" onchange="AdminApp.filterModalSubjects('material')">
+              <option value="all">All Semesters (1-6)</option>
+              <option value="1">Semester 1</option>
+              <option value="2">Semester 2</option>
+              <option value="3">Semester 3</option>
+              <option value="4">Semester 4</option>
+              <option value="5">Semester 5</option>
+              <option value="6">Semester 6</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <label style="margin-bottom: 0;">Target Subject</label>
+            <button type="button" class="btn btn-sm" style="padding: 2px 10px; font-size: 0.78rem; background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); border-radius: 4px;" onclick="AdminApp.openQuickSubjectAdd('modalMaterialSubject')">
+              ➕ Subject Not in List? Add New Subject
+            </button>
+          </div>
+          <select id="modalMaterialSubject" class="form-control" required></select>
+        </div>
+        <div class="form-group">
+          <label>Material Title</label>
+          <input type="text" id="modalMaterialTitle" class="form-control" placeholder="e.g. Linear Data Structures Complete Master Notes" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Chapter Number</label>
+            <input type="number" id="modalMaterialChapterNo" class="form-control" value="1" required>
+          </div>
+          <div class="form-group">
+            <label>Chapter / Topic Name</label>
+            <input type="text" id="modalMaterialChapterName" class="form-control" placeholder="e.g. Stack & Queue" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>File Size</label>
+            <input type="text" id="modalMaterialSize" class="form-control" value="Auto Detected" readonly style="background: rgba(10,15,29,0.5);">
+          </div>
+          <div class="form-group">
+            <label>Author / Faculty Name</label>
+            <input type="text" id="modalMaterialAuthor" class="form-control" value="GTU Senior Faculty">
+          </div>
+        </div>
+        
+        <!-- Direct File Upload Component -->
+        <div class="form-group">
+          <label>Upload Document File (PDF, Word .docx/.doc, PPT, TXT)</label>
+          <div class="file-upload-dropzone" onclick="document.getElementById('modalMaterialFile').click()">
+            <span style="font-size: 1.8rem;">📄</span>
+            <div>
+              <div style="font-weight: 600; color: #fff;" id="modalMaterialFileName">Click to Browse Document File</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">Supports PDF, Word (.docx/.doc), PPT, TXT (Max 50MB) • Stored in Database</div>
+            </div>
+            <input type="file" id="modalMaterialFile" accept=".pdf,.doc,.docx,.txt,.ppt,.pptx" style="display: none;" onchange="AdminApp.handleFileSelect(event, 'modalMaterialFileName', 'modalMaterialSize')">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Description & Key Topics</label>
+          <textarea id="modalMaterialDesc" class="form-control" rows="3" placeholder="Summary of topics covered in this lecture note..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" id="modalMaterialSubmitBtn" style="margin-top: 1rem;">
+          🚀 Upload & Save to Database
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal B: Add Book -->
+  <div class="crud-modal-overlay" id="bookModal">
+    <div class="crud-modal-box">
+      <div class="crud-modal-header">
+        <h3 style="color: #fff;">Add GTU Textbook / Reference Book</h3>
+        <button class="btn btn-secondary btn-sm" onclick="AdminApp.closeModal('bookModal')">✕</button>
+      </div>
+      <form class="crud-modal-body" onsubmit="AdminApp.handleCreateBook(event)">
+        <!-- Quick Branch & Semester Filters for Book Subject Selection -->
+        <div class="form-row" style="margin-bottom: 0.5rem; background: rgba(10,15,29,0.5); padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid var(--admin-card-border);">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 0.78rem; color: #94a3b8;">Filter Branch</label>
+            <select id="filterBookBranch" class="form-control" style="padding: 0.35rem 0.6rem; font-size: 0.82rem;" onchange="AdminApp.filterModalSubjects('book')">
+              <option value="all">All Branches</option>
+              <option value="ce">Computer (07)</option>
+              <option value="it">IT (16)</option>
+              <option value="me">Mechanical (19)</option>
+              <option value="cl">Civil (06)</option>
+              <option value="ee">Electrical (09)</option>
+              <option value="ec">EC (11)</option>
+              <option value="ae">Automobile (02)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 0.78rem; color: #94a3b8;">Filter Semester</label>
+            <select id="filterBookSem" class="form-control" style="padding: 0.35rem 0.6rem; font-size: 0.82rem;" onchange="AdminApp.filterModalSubjects('book')">
+              <option value="all">All Semesters (1-6)</option>
+              <option value="1">Semester 1</option>
+              <option value="2">Semester 2</option>
+              <option value="3">Semester 3</option>
+              <option value="4">Semester 4</option>
+              <option value="5">Semester 5</option>
+              <option value="6">Semester 6</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <label style="margin-bottom: 0;">Subject</label>
+            <button type="button" class="btn btn-sm" style="padding: 2px 10px; font-size: 0.78rem; background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); border-radius: 4px;" onclick="AdminApp.openQuickSubjectAdd('modalBookSubject')">
+              ➕ Subject Not in List? Add New Subject
+            </button>
+          </div>
+          <select id="modalBookSubject" class="form-control" required></select>
+        </div>
+        <div class="form-group">
+          <label>Book Title</label>
+          <input type="text" id="modalBookTitle" class="form-control" placeholder="e.g. Programming in ANSI C" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Author(s)</label>
+            <input type="text" id="modalBookAuthor" class="form-control" placeholder="e.g. E. Balagurusamy" required>
+          </div>
+          <div class="form-group">
+            <label>Publisher</label>
+            <input type="text" id="modalBookPublisher" class="form-control" value="McGraw Hill Education">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Edition</label>
+            <input type="text" id="modalBookEdition" class="form-control" value="8th Edition 2024">
+          </div>
+          <div class="form-group">
+            <label>Cover Image URL / Photo</label>
+            <input type="text" id="modalBookCover" class="form-control" value="https://images.unsplash.com/photo-1532012164546-f432f2e3edd4?w=400&q=80">
+          </div>
+        </div>
+
+        <!-- Direct Textbook File Upload -->
+        <div class="form-group">
+          <label>Upload Textbook File (PDF / Word .docx)</label>
+          <div class="file-upload-dropzone" onclick="document.getElementById('modalBookFile').click()">
+            <span style="font-size: 1.8rem;">📚</span>
+            <div>
+              <div style="font-weight: 600; color: #fff;" id="modalBookFileName">Click to Browse Textbook PDF / Document</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">Supports PDF, Word (.docx) • Stored directly on server & database</div>
+            </div>
+            <input type="file" id="modalBookFile" accept=".pdf,.doc,.docx" style="display: none;" onchange="AdminApp.handleFileSelect(event, 'modalBookFileName', null)">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="modalBookSubmitBtn" style="margin-top: 1rem;">
+          📚 Save Book to Catalog
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal C: Add Question Bank -->
+  <div class="crud-modal-overlay" id="questionModal">
+    <div class="crud-modal-box">
+      <div class="crud-modal-header">
+        <h3 style="color: #fff;">Add GTU Question Paper</h3>
+        <button class="btn btn-secondary btn-sm" onclick="AdminApp.closeModal('questionModal')">✕</button>
+      </div>
+      <form class="crud-modal-body" onsubmit="AdminApp.handleCreateQuestion(event)">
+        <!-- Quick Branch & Semester Filters for Question Paper Subject Selection -->
+        <div class="form-row" style="margin-bottom: 0.5rem; background: rgba(10,15,29,0.5); padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid var(--admin-card-border);">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 0.78rem; color: #94a3b8;">Filter Branch</label>
+            <select id="filterQuestionBranch" class="form-control" style="padding: 0.35rem 0.6rem; font-size: 0.82rem;" onchange="AdminApp.filterModalSubjects('question')">
+              <option value="all">All Branches</option>
+              <option value="ce">Computer (07)</option>
+              <option value="it">IT (16)</option>
+              <option value="me">Mechanical (19)</option>
+              <option value="cl">Civil (06)</option>
+              <option value="ee">Electrical (09)</option>
+              <option value="ec">EC (11)</option>
+              <option value="ae">Automobile (02)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 0.78rem; color: #94a3b8;">Filter Semester</label>
+            <select id="filterQuestionSem" class="form-control" style="padding: 0.35rem 0.6rem; font-size: 0.82rem;" onchange="AdminApp.filterModalSubjects('question')">
+              <option value="all">All Semesters (1-6)</option>
+              <option value="1">Semester 1</option>
+              <option value="2">Semester 2</option>
+              <option value="3">Semester 3</option>
+              <option value="4">Semester 4</option>
+              <option value="5">Semester 5</option>
+              <option value="6">Semester 6</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <label style="margin-bottom: 0;">Subject</label>
+            <button type="button" class="btn btn-sm" style="padding: 2px 10px; font-size: 0.78rem; background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); border-radius: 4px;" onclick="AdminApp.openQuickSubjectAdd('modalQuestionSubject')">
+              ➕ Subject Not in List? Add New Subject
+            </button>
+          </div>
+          <select id="modalQuestionSubject" class="form-control" required></select>
+        </div>
+        <div class="form-group">
+          <label>Paper Title</label>
+          <input type="text" id="modalQuestionTitle" class="form-control" placeholder="e.g. GTU Winter 2024 Regular Exam Paper" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Exam Year</label>
+            <input type="text" id="modalQuestionYear" class="form-control" value="2024" required>
+          </div>
+          <div class="form-group">
+            <label>Exam Season</label>
+            <select id="modalQuestionSeason" class="form-control">
+              <option value="Winter">Winter</option>
+              <option value="Summer">Summer</option>
+              <option value="Remedial">Remedial</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Total Marks</label>
+            <input type="number" id="modalQuestionMarks" class="form-control" value="70">
+          </div>
+          <div class="form-group">
+            <label>Question Count</label>
+            <input type="number" id="modalQuestionCount" class="form-control" value="14">
+          </div>
+        </div>
+
+        <!-- Direct Question Paper File Upload -->
+        <div class="form-group">
+          <label>Upload Question Paper (PDF / Word .docx / Images)</label>
+          <div class="file-upload-dropzone" onclick="document.getElementById('modalQuestionFile').click()">
+            <span style="font-size: 1.8rem;">❓</span>
+            <div>
+              <div style="font-weight: 600; color: #fff;" id="modalQuestionFileName">Click to Browse Exam Paper File</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">Supports PDF, Word (.docx/.doc), Images • Stored in Database</div>
+            </div>
+            <input type="file" id="modalQuestionFile" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display: none;" onchange="AdminApp.handleFileSelect(event, 'modalQuestionFileName', null)">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Paper Description</label>
+          <textarea id="modalQuestionDesc" class="form-control" rows="2" placeholder="Paper instructions or marks distribution..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" id="modalQuestionSubmitBtn" style="margin-top: 1rem;">
+          ❓ Upload & Save Question Paper
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal D: Add Solution -->
+  <div class="crud-modal-overlay" id="solutionModal">
+    <div class="crud-modal-box">
+      <div class="crud-modal-header">
+        <h3 style="color: #fff;">Publish Solved Paper Guide</h3>
+        <button class="btn btn-secondary btn-sm" onclick="AdminApp.closeModal('solutionModal')">✕</button>
+      </div>
+      <form class="crud-modal-body" onsubmit="AdminApp.handleCreateSolution(event)">
+        <!-- Quick Branch & Semester Filters for Solution Subject Selection -->
+        <div class="form-row" style="margin-bottom: 0.5rem; background: rgba(10,15,29,0.5); padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid var(--admin-card-border);">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 0.78rem; color: #94a3b8;">Filter Branch</label>
+            <select id="filterSolutionBranch" class="form-control" style="padding: 0.35rem 0.6rem; font-size: 0.82rem;" onchange="AdminApp.filterModalSubjects('solution')">
+              <option value="all">All Branches</option>
+              <option value="ce">Computer (07)</option>
+              <option value="it">IT (16)</option>
+              <option value="me">Mechanical (19)</option>
+              <option value="cl">Civil (06)</option>
+              <option value="ee">Electrical (09)</option>
+              <option value="ec">EC (11)</option>
+              <option value="ae">Automobile (02)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 0.78rem; color: #94a3b8;">Filter Semester</label>
+            <select id="filterSolutionSem" class="form-control" style="padding: 0.35rem 0.6rem; font-size: 0.82rem;" onchange="AdminApp.filterModalSubjects('solution')">
+              <option value="all">All Semesters (1-6)</option>
+              <option value="1">Semester 1</option>
+              <option value="2">Semester 2</option>
+              <option value="3">Semester 3</option>
+              <option value="4">Semester 4</option>
+              <option value="5">Semester 5</option>
+              <option value="6">Semester 6</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <label style="margin-bottom: 0;">Subject</label>
+            <button type="button" class="btn btn-sm" style="padding: 2px 10px; font-size: 0.78rem; background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); border-radius: 4px;" onclick="AdminApp.openQuickSubjectAdd('modalSolutionSubject')">
+              ➕ Subject Not in List? Add New Subject
+            </button>
+          </div>
+          <select id="modalSolutionSubject" class="form-control" required></select>
+        </div>
+        <div class="form-group">
+          <label>Solution Title</label>
+          <input type="text" id="modalSolutionTitle" class="form-control" placeholder="e.g. GTU Winter 2024 Complete Model Answers" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Exam Year</label>
+            <input type="text" id="modalSolutionYear" class="form-control" value="2024">
+          </div>
+          <div class="form-group">
+            <label>Season</label>
+            <input type="text" id="modalSolutionSeason" class="form-control" value="Winter">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Verified Faculty / Expert</label>
+          <input type="text" id="modalSolutionVerified" class="form-control" value="GTU Gold Medalist & Subject Faculty">
+        </div>
+        <div class="form-group">
+          <label>Key Formulas Included</label>
+          <input type="text" id="modalSolutionFormulas" class="form-control" placeholder="e.g. TAT = Completion - Arrival, WT = TAT - Burst">
+        </div>
+
+        <!-- Optional Document Upload for Solution -->
+        <div class="form-group">
+          <label>Upload Solved Document (PDF / Word .docx) [Optional]</label>
+          <div class="file-upload-dropzone" onclick="document.getElementById('modalSolutionFile').click()">
+            <span style="font-size: 1.8rem;">💡</span>
+            <div>
+              <div style="font-weight: 600; color: #fff;" id="modalSolutionFileName">Click to Browse Solved Paper File (Optional)</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">Supports PDF, Word (.docx) or enter markdown answer below</div>
+            </div>
+            <input type="file" id="modalSolutionFile" accept=".pdf,.doc,.docx,.txt" style="display: none;" onchange="AdminApp.handleFileSelect(event, 'modalSolutionFileName', null)">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Step-by-Step Solution Content (Markdown supported)</label>
+          <textarea id="modalSolutionContent" class="form-control" rows="6" placeholder="### Question 1 [7 Marks]... (or leave detailed explanation here)"></textarea>
+        </div>
+        <button type="submit" class="btn btn-success" id="modalSolutionSubmitBtn" style="margin-top: 1rem;">
+          💡 Publish Solution to Database
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal E: Add Subject -->
+  <div class="crud-modal-overlay" id="subjectModal">
+    <div class="crud-modal-box">
+      <div class="crud-modal-header">
+        <h3 style="color: #fff;">🏛️ Add New GTU Subject</h3>
+        <button class="btn btn-secondary btn-sm" onclick="AdminApp.closeModal('subjectModal')">✕</button>
+      </div>
+      <form class="crud-modal-body" onsubmit="AdminApp.handleCreateSubject(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Engineering Branch</label>
+            <select id="modalSubjectBranch" class="form-control" required></select>
+          </div>
+          <div class="form-group">
+            <label>Semester (1 to 6)</label>
+            <select id="modalSubjectSem" class="form-control" required>
+              <option value="1">📘 Semester 1</option>
+              <option value="2">📙 Semester 2</option>
+              <option value="3" selected>📗 Semester 3</option>
+              <option value="4">📕 Semester 4</option>
+              <option value="5">📓 Semester 5</option>
+              <option value="6">🎓 Semester 6</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>GTU Teaching Scheme</label>
+            <select id="modalSubjectScheme" class="form-control" required>
+              <option value="new" selected>🌟 New Scheme (43-Series / 2021+ Syllabus)</option>
+              <option value="old">📜 Old Scheme (33-Series / Legacy Syllabus)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>GTU Subject Code</label>
+            <input type="text" id="modalSubjectCode" class="form-control" placeholder="e.g. 4330701 or 3330704" required oninput="AdminApp.handleSubjectCodeInput(event)">
+          </div>
+        </div>
+
+        <div style="background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.2); border-radius: 6px; padding: 0.6rem 0.8rem; margin-bottom: 1rem; font-size: 0.8rem; color: #94a3b8;">
+          💡 <strong>GTU Subject Code Standard:</strong> 7-digit code. Codes starting with <strong style="color: #38bdf8;">43...</strong> belong to the <strong>New Scheme</strong>, while codes starting with <strong style="color: #fbbf24;">33...</strong> belong to the <strong>Old Scheme</strong>.
+        </div>
+
+        <div class="form-group">
+          <label>Subject Full Name</label>
+          <input type="text" id="modalSubjectName" class="form-control" placeholder="e.g. Advanced Java Programming" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Credits</label>
+            <input type="number" id="modalSubjectCredits" class="form-control" value="4">
+          </div>
+          <div class="form-group">
+            <label>Curriculum Category</label>
+            <select id="modalSubjectCategory" class="form-control">
+              <option value="Core Engineering" selected>Core Engineering</option>
+              <option value="Basic Science">Basic Science</option>
+              <option value="Humanities">Humanities</option>
+              <option value="Advanced Tech">Advanced Tech</option>
+              <option value="Applied Tech">Applied Tech</option>
+              <option value="Project">Project / Capstone</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Subject Description & Syllabus Summary</label>
+          <textarea id="modalSubjectDesc" class="form-control" rows="2" placeholder="Key chapters, units, and learning outcomes in this subject syllabus..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">
+          🏛️ Save GTU Subject to Database
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal F: Post Announcement -->
+  <div class="crud-modal-overlay" id="announcementModal">
+    <div class="crud-modal-box">
+      <div class="crud-modal-header">
+        <h3 style="color: #fff;">Post GTU Announcement / Notice</h3>
+        <button class="btn btn-secondary btn-sm" onclick="AdminApp.closeModal('announcementModal')">✕</button>
+      </div>
+      <form class="crud-modal-body" onsubmit="AdminApp.handleCreateAnnouncement(event)">
+        <div class="form-group">
+          <label>Announcement Category</label>
+          <select id="modalAnnounceCategory" class="form-control">
+            <option value="Exam Circular">Exam Circular</option>
+            <option value="Syllabus Update">Syllabus Update</option>
+            <option value="Study Materials">Study Materials</option>
+            <option value="Feature Update">Feature Update</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" id="modalAnnounceTitle" class="form-control" placeholder="e.g. Winter 2024 Exam Timetable Released" required>
+        </div>
+        <div class="form-group">
+          <label>Content / Notice Details</label>
+          <textarea id="modalAnnounceContent" class="form-control" rows="3" placeholder="Full notice details..." required></textarea>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+          <input type="checkbox" id="modalAnnouncePinned" style="width: 18px; height: 18px;">
+          <label for="modalAnnouncePinned" style="color: #cbd5e1; font-size: 0.9rem;">Pin to Top Notice Ticker</label>
+        </div>
+        <button type="submit" class="btn btn-warning" style="margin-top: 1rem;">
+          📢 Broadcast Notice
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/admin-app.js"></script>
+</body>
+</html>
