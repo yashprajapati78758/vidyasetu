@@ -18,19 +18,44 @@ const StudentApp = {
   solutionsMap: {},
 
   async init() {
-    this.renderNavAuth();
-    if (this.currentUser) {
+    this.bindEvents();
+    await this.syncAuthState();
+    await this.loadAnnouncements();
+  },
+
+  async syncAuthState() {
+    const gatewaySection = document.getElementById('studentAuthGatewaySection');
+    const mainWrapper = document.getElementById('studentAppMainWrapper');
+    const navLinks = document.getElementById('studentNavLinks');
+    const floatingAiBtn = document.getElementById('floatingAiBtn');
+
+    if (this.currentUser && this.authToken) {
+      // Authenticated Student View
+      if (gatewaySection) gatewaySection.style.display = 'none';
+      if (mainWrapper) mainWrapper.style.display = 'block';
+      if (navLinks) navLinks.style.display = 'flex';
+      if (floatingAiBtn) floatingAiBtn.style.display = 'flex';
+
       if (this.currentUser.branch_id) this.activeBranch = this.currentUser.branch_id;
       if (this.currentUser.semester) this.activeSem = parseInt(this.currentUser.semester, 10);
+
+      this.renderNavAuth();
+      this.renderEnrolledBanner();
+      this.updateSemesterTabUI(this.activeSem);
+
+      await this.loadBranches();
+      await this.loadSubjects();
+      if (window.StudentProgress) await StudentProgress.init();
+      if (window.AiTutor) AiTutor.init();
+    } else {
+      // Unauthenticated Guest View (Gateway Screen)
+      if (gatewaySection) gatewaySection.style.display = 'flex';
+      if (mainWrapper) mainWrapper.style.display = 'none';
+      if (navLinks) navLinks.style.display = 'none';
+      if (floatingAiBtn) floatingAiBtn.style.display = 'none';
+
+      this.renderNavAuth();
     }
-    this.renderEnrolledBanner();
-    this.updateSemesterTabUI(this.activeSem);
-    this.bindEvents();
-    await this.loadBranches();
-    await this.loadSubjects();
-    await this.loadAnnouncements();
-    if (window.StudentProgress) await StudentProgress.init();
-    if (window.AiTutor) AiTutor.init();
   },
 
   renderNavAuth() {
@@ -59,10 +84,10 @@ const StudentApp = {
     } else {
       navAuthContainer.innerHTML = `
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <button class="btn btn-primary btn-sm" onclick="StudentApp.openAuthModal('signin')" style="font-size: 0.82rem; padding: 6px 14px; font-weight: 700;">
-            🔑 Student Sign In
+          <button class="btn btn-primary btn-sm" onclick="StudentApp.switchGatewayTab('signin')" style="font-size: 0.82rem; padding: 6px 14px; font-weight: 700;">
+            🔑 Sign In
           </button>
-          <button class="btn btn-secondary btn-sm" onclick="StudentApp.openAuthModal('register')" style="font-size: 0.82rem; padding: 6px 12px;">
+          <button class="btn btn-secondary btn-sm" onclick="StudentApp.switchGatewayTab('register')" style="font-size: 0.82rem; padding: 6px 12px;">
             📝 Register
           </button>
           <a href="/admin" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; padding: 6px 10px;">
@@ -75,74 +100,174 @@ const StudentApp = {
 
   renderEnrolledBanner() {
     const bannerContainer = document.getElementById('studentEnrolledBannerWrap');
-    if (!bannerContainer) return;
+    if (!bannerContainer || !this.currentUser) return;
 
-    if (this.currentUser) {
-      const u = this.currentUser;
-      const univ = u.university || 'Gujarat Technological University (GTU)';
-      const course = u.course_type || 'Diploma in Engineering';
-      const branchName = u.branch_name || 'Computer Engineering';
-      const branchCode = u.branch_code ? `(${u.branch_code})` : '';
-      const sem = u.semester || 1;
-      const nextSem = sem < 6 ? sem + 1 : null;
+    const u = this.currentUser;
+    const univ = u.university || 'Gujarat Technological University (GTU)';
+    const course = u.course_type || 'Diploma in Engineering';
+    const branchName = u.branch_name || 'Computer Engineering';
+    const branchCode = u.branch_code ? `(${u.branch_code})` : '';
+    const sem = u.semester || 1;
+    const nextSem = sem < 6 ? sem + 1 : null;
 
-      bannerContainer.innerHTML = `
-        <div class="enrolled-course-banner">
-          <div>
-            <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem; flex-wrap: wrap;">
-              <span class="lock-badge">🔒 Enrolled Curriculum Active</span>
-              <span style="font-size: 0.8rem; color: #94a3b8;">${univ}</span>
-            </div>
-            <h3 style="font-size: 1.25rem; color: #fff; margin: 0; font-weight: 800;">
-              🎓 ${course} — <span style="color: #38bdf8;">${branchName} ${branchCode}</span>
-            </h3>
-            <div class="enrolled-info-meta">
-              <span class="enrolled-chip active-sem">📍 Current: Semester ${sem}</span>
-              <span class="enrolled-chip">👤 ${u.name} (Enrollment: ${u.enrollment_no || 'GTU'})</span>
-              <span class="enrolled-chip" style="color: #a5b4fc;">📚 Scheme: 43-Series & 33-Series</span>
-            </div>
+    bannerContainer.innerHTML = `
+      <div class="enrolled-course-banner">
+        <div>
+          <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem; flex-wrap: wrap;">
+            <span class="lock-badge">🔒 Enrolled Curriculum Active</span>
+            <span style="font-size: 0.8rem; color: #94a3b8;">${univ}</span>
           </div>
-          <div class="enrolled-actions">
-            ${nextSem ? `
-              <button class="btn btn-primary btn-sm" onclick="StudentApp.quickPromoteSemester(${nextSem})" title="Promote to Semester ${nextSem}">
-                ⚡ Promote to Sem ${nextSem}
-              </button>
-            ` : ''}
-            <button class="btn btn-secondary btn-sm" onclick="StudentApp.openProfileDetails()">
-              ⚙️ Manage Academic Course
-            </button>
+          <h3 style="font-size: 1.25rem; color: #fff; margin: 0; font-weight: 800;">
+            🎓 ${course} — <span style="color: #38bdf8;">${branchName} ${branchCode}</span>
+          </h3>
+          <div class="enrolled-info-meta">
+            <span class="enrolled-chip active-sem">📍 Current: Semester ${sem}</span>
+            <span class="enrolled-chip">👤 ${u.name} (Enrollment: ${u.enrollment_no || 'GTU'})</span>
+            <span class="enrolled-chip" style="color: #a5b4fc;">📚 Scheme: 43-Series & 33-Series</span>
           </div>
         </div>
-      `;
-    } else {
-      bannerContainer.innerHTML = `
-        <div class="enrolled-course-banner" style="border-color: rgba(255,255,255,0.12); background: rgba(18, 26, 45, 0.5);">
-          <div>
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-              <span style="font-size: 1.2rem;">🏛️</span>
-              <h4 style="font-size: 1.05rem; color: #fff; margin: 0;">Sign In for Personalized Course Curriculum</h4>
-            </div>
-            <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">
-              Register with your University, Diploma Branch, and Semester to automatically lock and view your exact syllabus and study materials.
-            </p>
-          </div>
-          <div class="enrolled-actions">
-            <button class="btn btn-primary btn-sm" onclick="StudentApp.openAuthModal('signin')">
-              🔑 Student Sign In
+        <div class="enrolled-actions">
+          ${nextSem ? `
+            <button class="btn btn-primary btn-sm" onclick="StudentApp.quickPromoteSemester(${nextSem})" title="Promote to Semester ${nextSem}">
+              ⚡ Promote to Sem ${nextSem}
             </button>
-            <button class="btn btn-secondary btn-sm" onclick="StudentApp.openAuthModal('register')">
-              📝 Register Free
-            </button>
-          </div>
+          ` : ''}
+          <button class="btn btn-secondary btn-sm" onclick="StudentApp.openProfileDetails()">
+            ⚙️ Manage Academic Course
+          </button>
         </div>
-      `;
-    }
+      </div>
+    `;
   },
 
   updateSemesterTabUI(semNum) {
     document.querySelectorAll('.sem-tab-btn').forEach(btn => {
       btn.classList.toggle('active', parseInt(btn.dataset.sem, 10) === semNum);
     });
+  },
+
+  switchGatewayTab(tab) {
+    const btnSignIn = document.getElementById('gatewayTabBtnSignIn');
+    const btnRegister = document.getElementById('gatewayTabBtnRegister');
+    const formSignIn = document.getElementById('formGatewaySignIn');
+    const formRegister = document.getElementById('formGatewayRegister');
+
+    if (tab === 'signin') {
+      if (btnSignIn) btnSignIn.classList.add('active');
+      if (btnRegister) btnRegister.classList.remove('active');
+      if (formSignIn) formSignIn.style.display = 'flex';
+      if (formRegister) formRegister.style.display = 'none';
+    } else {
+      if (btnSignIn) btnSignIn.classList.remove('active');
+      if (btnRegister) btnRegister.classList.add('active');
+      if (formSignIn) formSignIn.style.display = 'none';
+      if (formRegister) formRegister.style.display = 'flex';
+    }
+
+    const gatewaySection = document.getElementById('studentAuthGatewaySection');
+    if (gatewaySection && gatewaySection.style.display === 'none') {
+      this.openAuthModal(tab);
+    }
+  },
+
+  fillGatewayDemoCredentials() {
+    const identInput = document.getElementById('gatewayLoginIdentifier');
+    const passInput = document.getElementById('gatewayLoginPassword');
+    if (identInput) identInput.value = '226170307001';
+    if (passInput) passInput.value = 'student123';
+    if (window.App) App.showToast('Demo GTU student credentials filled!', 'info');
+  },
+
+  fillDemoStudentCredentials() {
+    const identInput = document.getElementById('authLoginIdentifier');
+    const passInput = document.getElementById('authLoginPassword');
+    if (identInput) identInput.value = '226170307001';
+    if (passInput) passInput.value = 'student123';
+    if (window.App) App.showToast('Demo GTU student credentials filled!', 'info');
+  },
+
+  async handleGatewayLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnGatewayLoginSubmit');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Signing in...';
+    }
+
+    try {
+      const identifier = document.getElementById('gatewayLoginIdentifier').value.trim();
+      const password = document.getElementById('gatewayLoginPassword').value.trim();
+
+      const res = await API.loginStudent({ identifier, password });
+      if (res.success && res.user) {
+        this.currentUser = res.user;
+        this.authToken = res.token;
+        localStorage.setItem('vidyasetu_student_user', JSON.stringify(res.user));
+        localStorage.setItem('vidyasetu_student_token', res.token);
+
+        await this.syncAuthState();
+        if (window.App) App.showToast(`Welcome back, ${res.user.name}! Locked to ${res.user.branch_name} (Sem ${this.activeSem})`, 'success');
+      } else {
+        if (window.App) App.showToast(res.error || 'Authentication failed', 'error');
+      }
+    } catch (err) {
+      if (window.App) App.showToast('Login Error: ' + err.message, 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '🚀 Sign In & Unlock My Course';
+      }
+    }
+  },
+
+  async handleGatewayRegister(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnGatewayRegSubmit');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Registering course...';
+    }
+
+    try {
+      const university = document.getElementById('gatewayRegUniversity').value;
+      const course_type = document.getElementById('gatewayRegCourse').value;
+      const branch_id = document.getElementById('gatewayRegBranch').value;
+      const semester = parseInt(document.getElementById('gatewayRegSem').value, 10);
+      const name = document.getElementById('gatewayRegName').value.trim();
+      const enrollment_no = document.getElementById('gatewayRegEnrollment').value.trim();
+      const email = document.getElementById('gatewayRegEmail').value.trim();
+      const password = document.getElementById('gatewayRegPassword').value.trim();
+
+      const res = await API.registerStudent({
+        university,
+        course_type,
+        branch_id,
+        semester,
+        name,
+        enrollment_no,
+        email,
+        password
+      });
+
+      if (res.success && res.user) {
+        this.currentUser = res.user;
+        this.authToken = res.token;
+        localStorage.setItem('vidyasetu_student_user', JSON.stringify(res.user));
+        localStorage.setItem('vidyasetu_student_token', res.token);
+
+        await this.syncAuthState();
+        if (window.App) App.showToast(`Account registered! Welcome to ${course_type} (${res.user.branch_name} Sem ${semester})`, 'success');
+      } else {
+        if (window.App) App.showToast(res.error || 'Registration failed', 'error');
+      }
+    } catch (err) {
+      if (window.App) App.showToast('Registration Error: ' + err.message, 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '🎓 Register & Access My Course';
+      }
+    }
   },
 
   openAuthModal(tab = 'signin') {
@@ -175,14 +300,6 @@ const StudentApp = {
     }
   },
 
-  fillDemoStudentCredentials() {
-    const identInput = document.getElementById('authLoginIdentifier');
-    const passInput = document.getElementById('authLoginPassword');
-    if (identInput) identInput.value = '226170307001';
-    if (passInput) passInput.value = 'student123';
-    if (window.App) App.showToast('Demo GTU student credentials filled!', 'info');
-  },
-
   async handleStudentLogin(e) {
     e.preventDefault();
     const btn = document.getElementById('btnStudentLoginSubmit');
@@ -202,18 +319,9 @@ const StudentApp = {
         localStorage.setItem('vidyasetu_student_user', JSON.stringify(res.user));
         localStorage.setItem('vidyasetu_student_token', res.token);
 
-        if (res.user.branch_id) this.activeBranch = res.user.branch_id;
-        if (res.user.semester) this.activeSem = parseInt(res.user.semester, 10);
-
         this.closeAuthModal();
-        this.renderNavAuth();
-        this.renderEnrolledBanner();
-        this.updateSemesterTabUI(this.activeSem);
-        this.renderBranches();
-        await this.loadSubjects();
-        if (window.StudentProgress) await StudentProgress.loadProgress(this.activeSem);
-
-        if (window.App) App.showToast(`Welcome back, ${res.user.name}! Locked to ${res.user.branch_name} (Sem ${this.activeSem})`, 'success');
+        await this.syncAuthState();
+        if (window.App) App.showToast(`Welcome back, ${res.user.name}! (Sem ${this.activeSem})`, 'success');
       } else {
         if (window.App) App.showToast(res.error || 'Authentication failed', 'error');
       }
@@ -232,7 +340,7 @@ const StudentApp = {
     const btn = document.getElementById('btnStudentRegSubmit');
     if (btn) {
       btn.disabled = true;
-      btn.textContent = '⏳ Registering course...';
+      btn.textContent = '⏳ Registering...';
     }
 
     try {
@@ -262,18 +370,9 @@ const StudentApp = {
         localStorage.setItem('vidyasetu_student_user', JSON.stringify(res.user));
         localStorage.setItem('vidyasetu_student_token', res.token);
 
-        this.activeBranch = branch_id;
-        this.activeSem = semester;
-
         this.closeAuthModal();
-        this.renderNavAuth();
-        this.renderEnrolledBanner();
-        this.updateSemesterTabUI(this.activeSem);
-        this.renderBranches();
-        await this.loadSubjects();
-        if (window.StudentProgress) await StudentProgress.loadProgress(this.activeSem);
-
-        if (window.App) App.showToast(`Account registered! Welcome to ${course_type} (${res.user.branch_name} Sem ${semester})`, 'success');
+        await this.syncAuthState();
+        if (window.App) App.showToast(`Account registered! Welcome to ${res.user.branch_name} Sem ${semester}`, 'success');
       } else {
         if (window.App) App.showToast(res.error || 'Registration failed', 'error');
       }
@@ -287,19 +386,18 @@ const StudentApp = {
     }
   },
 
-  logoutStudent() {
+  async logoutStudent() {
     this.currentUser = null;
     this.authToken = null;
     localStorage.removeItem('vidyasetu_student_user');
     localStorage.removeItem('vidyasetu_student_token');
-    this.renderNavAuth();
-    this.renderEnrolledBanner();
-    if (window.App) App.showToast('Logged out of student account', 'info');
+    await this.syncAuthState();
+    if (window.App) App.showToast('Logged out. Please sign in to access student portal.', 'info');
   },
 
   openProfileDetails() {
     if (!this.currentUser) {
-      this.openAuthModal('signin');
+      this.switchGatewayTab('signin');
       return;
     }
 
