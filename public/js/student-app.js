@@ -8,6 +8,8 @@ const StudentApp = {
   activeResourceTab: 'materials',
   branchesList: [],
   subjectsList: [],
+  currentUser: JSON.parse(localStorage.getItem('vidyasetu_student_user') || 'null'),
+  authToken: localStorage.getItem('vidyasetu_student_token') || null,
 
   // Resource Caches for robust modal opening without string escaping bugs
   materialsMap: {},
@@ -16,12 +18,205 @@ const StudentApp = {
   solutionsMap: {},
 
   async init() {
+    this.renderNavAuth();
+    if (this.currentUser) {
+      if (this.currentUser.branch_id) this.activeBranch = this.currentUser.branch_id;
+      if (this.currentUser.semester) this.activeSem = parseInt(this.currentUser.semester, 10);
+    }
     this.bindEvents();
     await this.loadBranches();
     await this.loadSubjects();
     await this.loadAnnouncements();
     if (window.StudentProgress) await StudentProgress.init();
     if (window.AiTutor) AiTutor.init();
+  },
+
+  renderNavAuth() {
+    const navAuthContainer = document.getElementById('studentNavAuth');
+    if (!navAuthContainer) return;
+
+    if (this.currentUser) {
+      const branchDisplay = (this.currentUser.branch_code || this.currentUser.branch_id || 'CE').toUpperCase();
+      navAuthContainer.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <div class="student-profile-badge" onclick="StudentApp.openProfileDetails()" title="Click to view student profile">
+            <img src="${this.currentUser.avatar || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&q=80'}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" alt="Student">
+            <div style="line-height: 1.2;">
+              <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">${this.currentUser.name}</div>
+              <div style="font-size: 0.68rem; color: #38bdf8;">${branchDisplay} • Sem ${this.currentUser.semester}</div>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="StudentApp.logoutStudent()" title="Sign Out" style="padding: 6px 10px; font-size: 0.78rem;">
+            🚪 Logout
+          </button>
+          <a href="/admin" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; padding: 6px 10px;">
+            <span>⚙️</span> Admin
+          </a>
+        </div>
+      `;
+    } else {
+      navAuthContainer.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <button class="btn btn-primary btn-sm" onclick="StudentApp.openAuthModal('signin')" style="font-size: 0.82rem; padding: 6px 14px; font-weight: 700;">
+            🔑 Student Sign In
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="StudentApp.openAuthModal('register')" style="font-size: 0.82rem; padding: 6px 12px;">
+            📝 Register
+          </button>
+          <a href="/admin" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; padding: 6px 10px;">
+            <span>⚙️</span> Admin
+          </a>
+        </div>
+      `;
+    }
+  },
+
+  openAuthModal(tab = 'signin') {
+    const modal = document.getElementById('studentAuthModal');
+    if (modal) modal.classList.add('active');
+    this.switchAuthTab(tab);
+  },
+
+  closeAuthModal() {
+    const modal = document.getElementById('studentAuthModal');
+    if (modal) modal.classList.remove('active');
+  },
+
+  switchAuthTab(tab) {
+    const btnSignIn = document.getElementById('tabBtnSignIn');
+    const btnRegister = document.getElementById('tabBtnRegister');
+    const formSignIn = document.getElementById('formStudentSignIn');
+    const formRegister = document.getElementById('formStudentRegister');
+
+    if (tab === 'signin') {
+      if (btnSignIn) btnSignIn.classList.add('active');
+      if (btnRegister) btnRegister.classList.remove('active');
+      if (formSignIn) formSignIn.style.display = 'flex';
+      if (formRegister) formRegister.style.display = 'none';
+    } else {
+      if (btnSignIn) btnSignIn.classList.remove('active');
+      if (btnRegister) btnRegister.classList.add('active');
+      if (formSignIn) formSignIn.style.display = 'none';
+      if (formRegister) formRegister.style.display = 'flex';
+    }
+  },
+
+  fillDemoStudentCredentials() {
+    const identInput = document.getElementById('authLoginIdentifier');
+    const passInput = document.getElementById('authLoginPassword');
+    if (identInput) identInput.value = '226170307001';
+    if (passInput) passInput.value = 'student123';
+    if (window.App) App.showToast('Demo student credentials filled!', 'info');
+  },
+
+  async handleStudentLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnStudentLoginSubmit');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Signing in...';
+    }
+
+    try {
+      const identifier = document.getElementById('authLoginIdentifier').value.trim();
+      const password = document.getElementById('authLoginPassword').value.trim();
+
+      const res = await API.loginStudent({ identifier, password });
+      if (res.success && res.user) {
+        this.currentUser = res.user;
+        this.authToken = res.token;
+        localStorage.setItem('vidyasetu_student_user', JSON.stringify(res.user));
+        localStorage.setItem('vidyasetu_student_token', res.token);
+
+        if (res.user.branch_id) this.activeBranch = res.user.branch_id;
+        if (res.user.semester) this.activeSem = parseInt(res.user.semester, 10);
+
+        this.closeAuthModal();
+        this.renderNavAuth();
+        this.renderBranches();
+        await this.loadSubjects();
+        if (window.StudentProgress) await StudentProgress.loadProgress(this.activeSem);
+
+        if (window.App) App.showToast(`Welcome, ${res.user.name}! (Sem ${this.activeSem})`, 'success');
+      } else {
+        if (window.App) App.showToast(res.error || 'Authentication failed', 'error');
+      }
+    } catch (err) {
+      if (window.App) App.showToast('Login Error: ' + err.message, 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '🚀 Sign In to VidyaSetu';
+      }
+    }
+  },
+
+  async handleStudentRegister(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnStudentRegSubmit');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Creating account...';
+    }
+
+    try {
+      const name = document.getElementById('authRegName').value.trim();
+      const enrollment_no = document.getElementById('authRegEnrollment').value.trim();
+      const email = document.getElementById('authRegEmail').value.trim();
+      const branch_id = document.getElementById('authRegBranch').value;
+      const semester = parseInt(document.getElementById('authRegSem').value, 10);
+      const password = document.getElementById('authRegPassword').value.trim();
+
+      const res = await API.registerStudent({
+        name,
+        enrollment_no,
+        email,
+        branch_id,
+        semester,
+        password
+      });
+
+      if (res.success && res.user) {
+        this.currentUser = res.user;
+        this.authToken = res.token;
+        localStorage.setItem('vidyasetu_student_user', JSON.stringify(res.user));
+        localStorage.setItem('vidyasetu_student_token', res.token);
+
+        this.activeBranch = branch_id;
+        this.activeSem = semester;
+
+        this.closeAuthModal();
+        this.renderNavAuth();
+        this.renderBranches();
+        await this.loadSubjects();
+        if (window.StudentProgress) await StudentProgress.loadProgress(this.activeSem);
+
+        if (window.App) App.showToast(`Account created! Welcome, ${res.user.name}!`, 'success');
+      } else {
+        if (window.App) App.showToast(res.error || 'Registration failed', 'error');
+      }
+    } catch (err) {
+      if (window.App) App.showToast('Registration Error: ' + err.message, 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '🎓 Create Student Account';
+      }
+    }
+  },
+
+  logoutStudent() {
+    this.currentUser = null;
+    this.authToken = null;
+    localStorage.removeItem('vidyasetu_student_user');
+    localStorage.removeItem('vidyasetu_student_token');
+    this.renderNavAuth();
+    if (window.App) App.showToast('Logged out of student account', 'info');
+  },
+
+  openProfileDetails() {
+    if (!this.currentUser) return;
+    this.switchTab('progress');
   },
 
   bindEvents() {

@@ -138,6 +138,20 @@ const API = {
     return this.request('/progress/bookmarks/toggle', { method: 'POST', body: JSON.stringify(data) });
   },
 
+  // Student Authentication
+  registerStudent(data) {
+    return this.request('/students/register', { method: 'POST', body: JSON.stringify(data) });
+  },
+  loginStudent(data) {
+    return this.request('/students/login', { method: 'POST', body: JSON.stringify(data) });
+  },
+  getStudentProfile(userId) {
+    return this.request(`/students/me?userId=${userId}`);
+  },
+  updateStudentProfile(data) {
+    return this.request('/students/profile', { method: 'PUT', body: JSON.stringify(data) });
+  },
+
   // AI Doubt Solver
   askAi(query, subject, language = 'en', userId = 'student_demo') {
     return this.request('/ai/solve', {

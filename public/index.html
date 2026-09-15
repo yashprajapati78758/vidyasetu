@@ -34,19 +34,8 @@
         </li>
       </ul>
 
-      <div class="nav-actions">
-        <!-- Student Profile Pill -->
-        <div style="display: flex; align-items: center; gap: 0.6rem; background: rgba(18,26,45,0.8); border: 1px solid var(--bg-glass-border); padding: 4px 12px 4px 6px; border-radius: var(--radius-full);">
-          <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&q=80" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" alt="Student">
-          <div style="line-height: 1.2;">
-            <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">Yash Patel</div>
-            <div style="font-size: 0.68rem; color: #38bdf8;">CE • Sem 3</div>
-          </div>
-        </div>
-
-        <a href="/admin" class="btn btn-secondary btn-sm" style="font-size: 0.78rem;">
-          <span>⚙️</span> Admin Login
-        </a>
+      <div class="nav-actions" id="studentNavAuth">
+        <!-- Populated dynamically by StudentApp.renderNavAuth() -->
       </div>
     </div>
   </nav>
@@ -324,27 +313,155 @@
   </div>
 
   <!-- ==========================================
-       MODAL 2: IN-BROWSER DOCUMENT & PDF VIEWER
+       MODAL 0: STUDENT AUTHENTICATION (SIGN IN & REGISTER)
+       ========================================== -->
+  <div class="student-auth-overlay" id="studentAuthModal">
+    <div class="student-auth-box">
+      <div class="student-auth-tabs">
+        <button class="student-auth-tab-btn active" id="tabBtnSignIn" onclick="StudentApp.switchAuthTab('signin')">
+          🔑 Student Sign In
+        </button>
+        <button class="student-auth-tab-btn" id="tabBtnRegister" onclick="StudentApp.switchAuthTab('register')">
+          📝 Create Account
+        </button>
+        <button style="background: none; border: none; color: #94a3b8; font-size: 1.2rem; padding: 0 1rem; cursor: pointer;" onclick="StudentApp.closeAuthModal()">✕</button>
+      </div>
+
+      <!-- Sign In Form -->
+      <form class="student-auth-body" id="formStudentSignIn" onsubmit="StudentApp.handleStudentLogin(event)">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="font-size: 0.85rem; color: #cbd5e1;">GTU Enrollment Number or Email</label>
+          <input type="text" id="authLoginIdentifier" class="form-control" placeholder="e.g. 226170307001 or email" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <label style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 0;">Password</label>
+            <span style="font-size: 0.75rem; color: #38bdf8; cursor: pointer;" onclick="StudentApp.fillDemoStudentCredentials()">⚡ Demo Student</span>
+          </div>
+          <input type="password" id="authLoginPassword" class="form-control" placeholder="Enter your password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="btnStudentLoginSubmit" style="margin-top: 0.5rem; justify-content: center; font-weight: 700;">
+          🚀 Sign In to VidyaSetu
+        </button>
+        <div style="text-align: center; font-size: 0.82rem; color: #94a3b8; margin-top: 0.25rem;">
+          Don't have an account? <a href="javascript:void(0)" onclick="StudentApp.switchAuthTab('register')" style="color: #38bdf8; font-weight: 600;">Create Account</a>
+        </div>
+      </form>
+
+      <!-- Register Form -->
+      <form class="student-auth-body" id="formStudentRegister" onsubmit="StudentApp.handleStudentRegister(event)" style="display: none;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="font-size: 0.85rem; color: #cbd5e1;">Full Name</label>
+          <input type="text" id="authRegName" class="form-control" placeholder="e.g. Yash Patel" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="font-size: 0.85rem; color: #cbd5e1;">GTU Enrollment Number</label>
+          <input type="text" id="authRegEnrollment" class="form-control" placeholder="e.g. 226190307001" required>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="font-size: 0.85rem; color: #cbd5e1;">Email Address</label>
+          <input type="email" id="authRegEmail" class="form-control" placeholder="e.g. student@gtu.ac.in" required>
+        </div>
+        <div class="form-row" style="gap: 0.75rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 0.85rem; color: #cbd5e1;">Branch</label>
+            <select id="authRegBranch" class="form-control" required>
+              <option value="ce">Computer (07)</option>
+              <option value="it">IT (16)</option>
+              <option value="me">Mechanical (19)</option>
+              <option value="cl">Civil (06)</option>
+              <option value="ee">Electrical (09)</option>
+              <option value="ec">EC (11)</option>
+              <option value="ae">Automobile (02)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 0.85rem; color: #cbd5e1;">Semester</label>
+            <select id="authRegSem" class="form-control" required>
+              <option value="1">Semester 1</option>
+              <option value="2">Semester 2</option>
+              <option value="3" selected>Semester 3</option>
+              <option value="4">Semester 4</option>
+              <option value="5">Semester 5</option>
+              <option value="6">Semester 6</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label style="font-size: 0.85rem; color: #cbd5e1;">Password</label>
+          <input type="password" id="authRegPassword" class="form-control" placeholder="Create a password" required minlength="4">
+        </div>
+        <button type="submit" class="btn btn-primary" id="btnStudentRegSubmit" style="margin-top: 0.5rem; justify-content: center; font-weight: 700;">
+          🎓 Create Student Account
+        </button>
+        <div style="text-align: center; font-size: 0.82rem; color: #94a3b8; margin-top: 0.25rem;">
+          Already registered? <a href="javascript:void(0)" onclick="StudentApp.switchAuthTab('signin')" style="color: #38bdf8; font-weight: 600;">Sign In</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL 2: BRAINHEATERS-STYLE IN-BROWSER DIGITAL READER
        ========================================== -->
   <div class="viewer-modal-overlay" id="viewerModalOverlay">
-    <div class="viewer-container">
+    <div class="viewer-container" id="readerContainer">
+      <!-- Reader Header Toolbar -->
       <div class="viewer-toolbar">
-        <div>
+        <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="DocViewer.toggleSidebar()" id="readerSidebarToggleBtn" title="Toggle Table of Contents" style="font-size: 0.78rem;">
+            📑 Units
+          </button>
           <span style="background: rgba(56,189,248,0.2); color: #38bdf8; font-weight: 700; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;" id="viewerTypeBadge">PDF</span>
-          <strong style="color: #fff; margin-left: 0.5rem;" id="viewerTitle">Document Title</strong>
-          <span style="color: #94a3b8; font-size: 0.8rem; margin-left: 0.5rem;" id="viewerMetaText">Author / Faculty</span>
+          <strong style="color: #fff; font-size: 0.92rem; max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="viewerTitle">Document Title</strong>
         </div>
-        <div style="display: flex; gap: 0.5rem; align-items: center;">
-          <button class="btn btn-secondary btn-sm" onclick="DocViewer.zoomOut()">🔍 -</button>
-          <span style="color: #cbd5e1; font-size: 0.85rem;" id="viewerZoomLevel">100%</span>
-          <button class="btn btn-secondary btn-sm" onclick="DocViewer.zoomIn()">🔍 +</button>
-          <button class="btn btn-secondary btn-sm" onclick="DocViewer.resetZoom()">Reset</button>
-          <button class="btn btn-secondary btn-sm" onclick="DocViewer.close()">✕</button>
+
+        <!-- Center Controls: Reading Themes & Sizing -->
+        <div style="display: flex; align-items: center; gap: 0.35rem; background: rgba(10,15,29,0.7); padding: 3px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+          <span style="font-size: 0.75rem; color: #94a3b8; margin-right: 2px;">Theme:</span>
+          <button class="reader-theme-btn active" data-theme="dark" onclick="DocViewer.setTheme('dark')" title="Night Dark Mode">🌙 Dark</button>
+          <button class="reader-theme-btn" data-theme="sepia" onclick="DocViewer.setTheme('sepia')" title="Eye-Care Sepia Warm Mode">📜 Sepia</button>
+          <button class="reader-theme-btn" data-theme="light" onclick="DocViewer.setTheme('light')" title="Day Paper Mode">☀️ Day</button>
+          
+          <div style="width: 1px; height: 16px; background: rgba(255,255,255,0.15); margin: 0 3px;"></div>
+          
+          <button class="btn btn-secondary btn-sm" style="padding: 2px 7px; font-size: 0.75rem;" onclick="DocViewer.zoomOut()" title="Decrease Text Size">A-</button>
+          <span style="color: #cbd5e1; font-size: 0.75rem; font-weight: 600;" id="viewerZoomLevel">100%</span>
+          <button class="btn btn-secondary btn-sm" style="padding: 2px 7px; font-size: 0.75rem;" onclick="DocViewer.zoomIn()" title="Increase Text Size">A+</button>
+        </div>
+
+        <!-- Right Controls: Progress, AI Doubt, Close -->
+        <div style="display: flex; gap: 0.4rem; align-items: center;">
+          <button class="btn btn-success btn-sm" id="readerProgressBtn" onclick="DocViewer.markCurrentCompleted()" style="font-size: 0.78rem; padding: 4px 10px;">
+            ✅ Mark Mastered
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="DocViewer.askAiAboutDoc()" style="font-size: 0.78rem; padding: 4px 10px; background: linear-gradient(135deg, #0284c7, #6366f1);">
+            ✨ Ask AI
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="DocViewer.toggleFullscreen()" title="Fullscreen" style="padding: 4px 8px;">
+            ⛶
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="DocViewer.close()" style="padding: 4px 10px;">✕</button>
         </div>
       </div>
 
-      <div class="viewer-content" id="viewerDocContent">
-        <!-- Rendered dynamically -->
+      <!-- Reader Body Layout: Sidebar + Reading Canvas -->
+      <div class="reader-wrapper">
+        <!-- Table of Contents Sidebar -->
+        <div class="reader-sidebar" id="readerSidebar">
+          <div class="reader-sidebar-header">
+            <span style="font-size: 0.85rem; font-weight: 700; color: #38bdf8;">📑 Chapter Outline</span>
+            <span style="font-size: 0.72rem; color: #94a3b8;" id="readerChapterCount">6 Units</span>
+          </div>
+          <div class="reader-toc-list" id="readerTocList">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Main Reading Canvas -->
+        <div class="viewer-content reader-theme-dark" id="viewerDocContent">
+          <!-- Rendered dynamically -->
+        </div>
       </div>
     </div>
   </div>

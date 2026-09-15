@@ -142,6 +142,7 @@ function initDatabase() {
       name TEXT NOT NULL,
       enrollment_no TEXT UNIQUE,
       email TEXT UNIQUE,
+      password TEXT,
       branch_id TEXT,
       semester INTEGER DEFAULT 1,
       role TEXT DEFAULT 'student',
@@ -195,6 +196,14 @@ function initDatabase() {
   // Migration: ensure scheme column exists in subjects table
   try {
     db.exec("ALTER TABLE subjects ADD COLUMN scheme TEXT DEFAULT 'new'");
+  } catch (e) {
+    // column already exists
+  }
+
+  // Migration: ensure password column exists in users table
+  try {
+    db.exec("ALTER TABLE users ADD COLUMN password TEXT");
+    db.exec("UPDATE users SET password = 'student123' WHERE password IS NULL");
   } catch (e) {
     // column already exists
   }
@@ -921,12 +930,12 @@ $$A^{-1} = \\begin{bmatrix} -40 & 16 & 9 \\\\ 13 & -5 & -3 \\\\ 5 & -2 & -1 \\en
 
   // 8. Users (Admin + Student Demo)
   const insertUser = db.prepare(`
-    INSERT OR IGNORE INTO users (id, name, enrollment_no, email, branch_id, semester, role, avatar)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT OR IGNORE INTO users (id, name, enrollment_no, email, password, branch_id, semester, role, avatar)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
-  insertUser.run('usr_admin', 'GTU Admin Portal', 'ADMIN001', 'admin@vidyasetu.gtu.ac.in', 'ce', 6, 'admin', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80');
-  insertUser.run('student_demo', 'Yash Patel', '226170307001', 'yash.patel@student.gtu.ac.in', 'ce', 3, 'student', 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&q=80');
+  insertUser.run('usr_admin', 'GTU Admin Portal', 'ADMIN001', 'admin@vidyasetu.gtu.ac.in', 'admin123', 'ce', 6, 'admin', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80');
+  insertUser.run('student_demo', 'Yash Patel', '226170307001', 'yash.patel@student.gtu.ac.in', 'student123', 'ce', 3, 'student', 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&q=80');
 
   // 9. Initial Student Progress for Demo User
   const insertProgress = db.prepare(`

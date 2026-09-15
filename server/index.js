@@ -37,6 +37,7 @@ app.use('/api/question-banks', require('./routes/questions'));
 app.use('/api/solutions', require('./routes/solutions'));
 app.use('/api/progress', require('./routes/progress'));
 app.use('/api/ai', require('./routes/ai'));
+app.use('/api/students', require('./routes/students'));
 app.use('/api/admin', require('./routes/admin'));
 
 // Fallback to index.html for SPA client-side routing
