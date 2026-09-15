@@ -1,4 +1,4 @@
-// VidyaSetu Dedicated Student Portal Application Controller (Strict Read-Only Mode)
+// VidyaSetu Dedicated Student Portal Application Controller (Course-Locked & Strict Read-Only Mode)
 const StudentApp = {
   currentTab: 'home',
   activeBranch: 'ce',
@@ -23,6 +23,8 @@ const StudentApp = {
       if (this.currentUser.branch_id) this.activeBranch = this.currentUser.branch_id;
       if (this.currentUser.semester) this.activeSem = parseInt(this.currentUser.semester, 10);
     }
+    this.renderEnrolledBanner();
+    this.updateSemesterTabUI(this.activeSem);
     this.bindEvents();
     await this.loadBranches();
     await this.loadSubjects();
@@ -39,7 +41,7 @@ const StudentApp = {
       const branchDisplay = (this.currentUser.branch_code || this.currentUser.branch_id || 'CE').toUpperCase();
       navAuthContainer.innerHTML = `
         <div style="display: flex; align-items: center; gap: 0.6rem;">
-          <div class="student-profile-badge" onclick="StudentApp.openProfileDetails()" title="Click to view student profile">
+          <div class="student-profile-badge" onclick="StudentApp.openProfileDetails()" title="Click to view & manage course profile">
             <img src="${this.currentUser.avatar || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&q=80'}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" alt="Student">
             <div style="line-height: 1.2;">
               <div style="font-size: 0.82rem; font-weight: 700; color: #fff;">${this.currentUser.name}</div>
@@ -69,6 +71,78 @@ const StudentApp = {
         </div>
       `;
     }
+  },
+
+  renderEnrolledBanner() {
+    const bannerContainer = document.getElementById('studentEnrolledBannerWrap');
+    if (!bannerContainer) return;
+
+    if (this.currentUser) {
+      const u = this.currentUser;
+      const univ = u.university || 'Gujarat Technological University (GTU)';
+      const course = u.course_type || 'Diploma in Engineering';
+      const branchName = u.branch_name || 'Computer Engineering';
+      const branchCode = u.branch_code ? `(${u.branch_code})` : '';
+      const sem = u.semester || 1;
+      const nextSem = sem < 6 ? sem + 1 : null;
+
+      bannerContainer.innerHTML = `
+        <div class="enrolled-course-banner">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem; flex-wrap: wrap;">
+              <span class="lock-badge">🔒 Enrolled Curriculum Active</span>
+              <span style="font-size: 0.8rem; color: #94a3b8;">${univ}</span>
+            </div>
+            <h3 style="font-size: 1.25rem; color: #fff; margin: 0; font-weight: 800;">
+              🎓 ${course} — <span style="color: #38bdf8;">${branchName} ${branchCode}</span>
+            </h3>
+            <div class="enrolled-info-meta">
+              <span class="enrolled-chip active-sem">📍 Current: Semester ${sem}</span>
+              <span class="enrolled-chip">👤 ${u.name} (Enrollment: ${u.enrollment_no || 'GTU'})</span>
+              <span class="enrolled-chip" style="color: #a5b4fc;">📚 Scheme: 43-Series & 33-Series</span>
+            </div>
+          </div>
+          <div class="enrolled-actions">
+            ${nextSem ? `
+              <button class="btn btn-primary btn-sm" onclick="StudentApp.quickPromoteSemester(${nextSem})" title="Promote to Semester ${nextSem}">
+                ⚡ Promote to Sem ${nextSem}
+              </button>
+            ` : ''}
+            <button class="btn btn-secondary btn-sm" onclick="StudentApp.openProfileDetails()">
+              ⚙️ Manage Academic Course
+            </button>
+          </div>
+        </div>
+      `;
+    } else {
+      bannerContainer.innerHTML = `
+        <div class="enrolled-course-banner" style="border-color: rgba(255,255,255,0.12); background: rgba(18, 26, 45, 0.5);">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+              <span style="font-size: 1.2rem;">🏛️</span>
+              <h4 style="font-size: 1.05rem; color: #fff; margin: 0;">Sign In for Personalized Course Curriculum</h4>
+            </div>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">
+              Register with your University, Diploma Branch, and Semester to automatically lock and view your exact syllabus and study materials.
+            </p>
+          </div>
+          <div class="enrolled-actions">
+            <button class="btn btn-primary btn-sm" onclick="StudentApp.openAuthModal('signin')">
+              🔑 Student Sign In
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="StudentApp.openAuthModal('register')">
+              📝 Register Free
+            </button>
+          </div>
+        </div>
+      `;
+    }
+  },
+
+  updateSemesterTabUI(semNum) {
+    document.querySelectorAll('.sem-tab-btn').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.sem, 10) === semNum);
+    });
   },
 
   openAuthModal(tab = 'signin') {
@@ -106,7 +180,7 @@ const StudentApp = {
     const passInput = document.getElementById('authLoginPassword');
     if (identInput) identInput.value = '226170307001';
     if (passInput) passInput.value = 'student123';
-    if (window.App) App.showToast('Demo student credentials filled!', 'info');
+    if (window.App) App.showToast('Demo GTU student credentials filled!', 'info');
   },
 
   async handleStudentLogin(e) {
@@ -133,11 +207,13 @@ const StudentApp = {
 
         this.closeAuthModal();
         this.renderNavAuth();
+        this.renderEnrolledBanner();
+        this.updateSemesterTabUI(this.activeSem);
         this.renderBranches();
         await this.loadSubjects();
         if (window.StudentProgress) await StudentProgress.loadProgress(this.activeSem);
 
-        if (window.App) App.showToast(`Welcome, ${res.user.name}! (Sem ${this.activeSem})`, 'success');
+        if (window.App) App.showToast(`Welcome back, ${res.user.name}! Locked to ${res.user.branch_name} (Sem ${this.activeSem})`, 'success');
       } else {
         if (window.App) App.showToast(res.error || 'Authentication failed', 'error');
       }
@@ -156,23 +232,27 @@ const StudentApp = {
     const btn = document.getElementById('btnStudentRegSubmit');
     if (btn) {
       btn.disabled = true;
-      btn.textContent = '⏳ Creating account...';
+      btn.textContent = '⏳ Registering course...';
     }
 
     try {
+      const university = document.getElementById('authRegUniversity').value;
+      const course_type = document.getElementById('authRegCourse').value;
+      const branch_id = document.getElementById('authRegBranch').value;
+      const semester = parseInt(document.getElementById('authRegSem').value, 10);
       const name = document.getElementById('authRegName').value.trim();
       const enrollment_no = document.getElementById('authRegEnrollment').value.trim();
       const email = document.getElementById('authRegEmail').value.trim();
-      const branch_id = document.getElementById('authRegBranch').value;
-      const semester = parseInt(document.getElementById('authRegSem').value, 10);
       const password = document.getElementById('authRegPassword').value.trim();
 
       const res = await API.registerStudent({
+        university,
+        course_type,
+        branch_id,
+        semester,
         name,
         enrollment_no,
         email,
-        branch_id,
-        semester,
         password
       });
 
@@ -187,11 +267,13 @@ const StudentApp = {
 
         this.closeAuthModal();
         this.renderNavAuth();
+        this.renderEnrolledBanner();
+        this.updateSemesterTabUI(this.activeSem);
         this.renderBranches();
         await this.loadSubjects();
         if (window.StudentProgress) await StudentProgress.loadProgress(this.activeSem);
 
-        if (window.App) App.showToast(`Account created! Welcome, ${res.user.name}!`, 'success');
+        if (window.App) App.showToast(`Account registered! Welcome to ${course_type} (${res.user.branch_name} Sem ${semester})`, 'success');
       } else {
         if (window.App) App.showToast(res.error || 'Registration failed', 'error');
       }
@@ -200,7 +282,7 @@ const StudentApp = {
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.textContent = '🎓 Create Student Account';
+        btn.textContent = '🎓 Register & Access My Course';
       }
     }
   },
@@ -211,12 +293,120 @@ const StudentApp = {
     localStorage.removeItem('vidyasetu_student_user');
     localStorage.removeItem('vidyasetu_student_token');
     this.renderNavAuth();
+    this.renderEnrolledBanner();
     if (window.App) App.showToast('Logged out of student account', 'info');
   },
 
   openProfileDetails() {
+    if (!this.currentUser) {
+      this.openAuthModal('signin');
+      return;
+    }
+
+    const modal = document.getElementById('studentProfileModal');
+    const view = document.getElementById('profileDetailsView');
+    const semSelect = document.getElementById('profileEditSemester');
+
+    if (view) {
+      const u = this.currentUser;
+      view.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 1rem; background: rgba(10,15,29,0.7); padding: 1rem; border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.08);">
+          <img src="${u.avatar || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&q=80'}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;" alt="Avatar">
+          <div>
+            <h3 style="color: #fff; font-size: 1.1rem; margin: 0;">${u.name}</h3>
+            <p style="color: #38bdf8; font-size: 0.8rem; margin: 2px 0 0 0;">GTU Enrollment: <strong>${u.enrollment_no}</strong></p>
+            <p style="color: #94a3b8; font-size: 0.75rem; margin: 2px 0 0 0;">${u.email}</p>
+          </div>
+        </div>
+
+        <div style="background: rgba(10,15,29,0.5); padding: 0.9rem; border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.08); font-size: 0.85rem; line-height: 1.6;">
+          <div>🏛️ <strong>University:</strong> <span style="color: #e2e8f0;">${u.university || 'Gujarat Technological University (GTU)'}</span></div>
+          <div>📚 <strong>Course:</strong> <span style="color: #e2e8f0;">${u.course_type || 'Diploma in Engineering'}</span></div>
+          <div>💻 <strong>Branch:</strong> <span style="color: #38bdf8;">${u.branch_name || 'Engineering'} (${u.branch_code || u.branch_id})</span></div>
+          <div>📅 <strong>Active Semester:</strong> <span style="color: #34d399; font-weight: 700;">Semester ${u.semester}</span></div>
+        </div>
+      `;
+    }
+
+    if (semSelect) {
+      semSelect.value = this.currentUser.semester || 1;
+    }
+
+    if (modal) modal.classList.add('active');
+  },
+
+  closeProfileModal() {
+    const modal = document.getElementById('studentProfileModal');
+    if (modal) modal.classList.remove('active');
+  },
+
+  async handleProfileUpdate(e) {
+    e.preventDefault();
     if (!this.currentUser) return;
-    this.switchTab('progress');
+
+    const btn = document.getElementById('btnProfileSaveSubmit');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Updating...';
+    }
+
+    try {
+      const newSem = parseInt(document.getElementById('profileEditSemester').value, 10);
+      const res = await API.updateStudentProfile({
+        user_id: this.currentUser.id,
+        semester: newSem
+      });
+
+      if (res.success && res.user) {
+        this.currentUser = res.user;
+        localStorage.setItem('vidyasetu_student_user', JSON.stringify(res.user));
+        this.activeSem = newSem;
+
+        this.closeProfileModal();
+        this.renderNavAuth();
+        this.renderEnrolledBanner();
+        this.updateSemesterTabUI(this.activeSem);
+        await this.loadSubjects();
+        if (window.StudentProgress) await StudentProgress.loadProgress(this.activeSem);
+
+        if (window.App) App.showToast(`Updated! You are now viewing Semester ${newSem} curriculum.`, 'success');
+      } else {
+        if (window.App) App.showToast(res.error || 'Failed to update semester', 'error');
+      }
+    } catch (err) {
+      if (window.App) App.showToast('Profile Error: ' + err.message, 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '💾 Update & Save Academic Progress';
+      }
+    }
+  },
+
+  async quickPromoteSemester(targetSem) {
+    if (!this.currentUser) return;
+    try {
+      const res = await API.updateStudentProfile({
+        user_id: this.currentUser.id,
+        semester: targetSem
+      });
+
+      if (res.success && res.user) {
+        this.currentUser = res.user;
+        localStorage.setItem('vidyasetu_student_user', JSON.stringify(res.user));
+        this.activeSem = targetSem;
+
+        this.renderNavAuth();
+        this.renderEnrolledBanner();
+        this.updateSemesterTabUI(this.activeSem);
+        await this.loadSubjects();
+        if (window.StudentProgress) await StudentProgress.loadProgress(this.activeSem);
+
+        if (window.App) App.showToast(`🎉 Promoted to Semester ${targetSem}! Loaded new subjects.`, 'success');
+      }
+    } catch (err) {
+      if (window.App) App.showToast('Promotion Error: ' + err.message, 'error');
+    }
   },
 
   bindEvents() {
@@ -292,11 +482,7 @@ const StudentApp = {
 
   async selectSemester(semNum) {
     this.activeSem = semNum;
-
-    document.querySelectorAll('.sem-tab-btn').forEach(btn => {
-      btn.classList.toggle('active', parseInt(btn.dataset.sem, 10) === semNum);
-    });
-
+    this.updateSemesterTabUI(semNum);
     await this.loadSubjects();
     if (window.StudentProgress) StudentProgress.loadProgress(semNum);
   },

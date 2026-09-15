@@ -143,6 +143,8 @@ function initDatabase() {
       enrollment_no TEXT UNIQUE,
       email TEXT UNIQUE,
       password TEXT,
+      university TEXT DEFAULT 'Gujarat Technological University (GTU)',
+      course_type TEXT DEFAULT 'Diploma in Engineering',
       branch_id TEXT,
       semester INTEGER DEFAULT 1,
       role TEXT DEFAULT 'student',
@@ -204,6 +206,18 @@ function initDatabase() {
   try {
     db.exec("ALTER TABLE users ADD COLUMN password TEXT");
     db.exec("UPDATE users SET password = 'student123' WHERE password IS NULL");
+  } catch (e) {
+    // column already exists
+  }
+
+  // Migration: ensure university and course_type columns exist in users table
+  try {
+    db.exec("ALTER TABLE users ADD COLUMN university TEXT DEFAULT 'Gujarat Technological University (GTU)'");
+  } catch (e) {
+    // column already exists
+  }
+  try {
+    db.exec("ALTER TABLE users ADD COLUMN course_type TEXT DEFAULT 'Diploma in Engineering'");
   } catch (e) {
     // column already exists
   }

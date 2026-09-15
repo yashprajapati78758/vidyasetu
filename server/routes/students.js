@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../database');
 
-// POST /api/students/register - Create new Student Account
+// POST /api/students/register - Create new Student Account with University, Course, Branch & Semester
 router.post('/register', (req, res) => {
   try {
-    const { name, enrollment_no, email, password, branch_id, semester } = req.body;
+    const { name, enrollment_no, email, password, university, course_type, branch_id, semester } = req.body;
 
     if (!name || !enrollment_no || !password || !branch_id) {
       return res.status(400).json({ 
@@ -17,6 +17,8 @@ router.post('/register', (req, res) => {
     const cleanEnroll = enrollment_no.trim();
     const cleanEmail = (email || `${cleanEnroll}@student.gtu.ac.in`).trim().toLowerCase();
     const cleanName = name.trim();
+    const cleanUniv = (university || 'Gujarat Technological University (GTU)').trim();
+    const cleanCourse = (course_type || 'Diploma in Engineering').trim();
     const sem = parseInt(semester, 10) || 1;
 
     // Check if enrollment number or email already registered
@@ -34,11 +36,11 @@ router.post('/register', (req, res) => {
     const avatar = `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80`;
 
     const insert = db.prepare(`
-      INSERT INTO users (id, name, enrollment_no, email, password, branch_id, semester, role, avatar)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'student', ?)
+      INSERT INTO users (id, name, enrollment_no, email, password, university, course_type, branch_id, semester, role, avatar)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'student', ?)
     `);
 
-    insert.run(userId, cleanName, cleanEnroll, cleanEmail, password, branch_id, sem, avatar);
+    insert.run(userId, cleanName, cleanEnroll, cleanEmail, password, cleanUniv, cleanCourse, branch_id, sem, avatar);
 
     // Fetch branch info
     const branch = db.prepare('SELECT name, code FROM branches WHERE id = ?').get(branch_id);
@@ -48,6 +50,8 @@ router.post('/register', (req, res) => {
       name: cleanName,
       enrollment_no: cleanEnroll,
       email: cleanEmail,
+      university: cleanUniv,
+      course_type: cleanCourse,
       branch_id: branch_id,
       branch_name: branch ? branch.name : 'Engineering',
       branch_code: branch ? branch.code : '07',
@@ -60,7 +64,7 @@ router.post('/register', (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: `Welcome to VidyaSetu, ${cleanName}!`,
+      message: `Welcome to VidyaSetu, ${cleanName}! Registered for ${cleanUniv} (${cleanCourse}).`,
       token,
       user
     });
@@ -117,7 +121,7 @@ router.get('/me', (req, res) => {
     }
 
     const user = db.prepare(`
-      SELECT u.id, u.name, u.enrollment_no, u.email, u.branch_id, u.semester, u.role, u.avatar,
+      SELECT u.id, u.name, u.enrollment_no, u.email, u.university, u.course_type, u.branch_id, u.semester, u.role, u.avatar,
              b.name as branch_name, b.code as branch_code
       FROM users u
       LEFT JOIN branches b ON u.branch_id = b.id
@@ -143,10 +147,10 @@ router.get('/me', (req, res) => {
   }
 });
 
-// PUT /api/students/profile - Update Student Profile
+// PUT /api/students/profile - Update Student Profile (Promote Semester, Change Branch/University)
 router.put('/profile', (req, res) => {
   try {
-    const { user_id, name, branch_id, semester } = req.body;
+    const { user_id, name, university, course_type, branch_id, semester } = req.body;
     if (!user_id) {
       return res.status(400).json({ success: false, error: 'user_id is required' });
     }
@@ -154,15 +158,24 @@ router.put('/profile', (req, res) => {
     const update = db.prepare(`
       UPDATE users 
       SET name = COALESCE(?, name),
+          university = COALESCE(?, university),
+          course_type = COALESCE(?, course_type),
           branch_id = COALESCE(?, branch_id),
           semester = COALESCE(?, semester)
       WHERE id = ?
     `);
 
-    update.run(name ? name.trim() : null, branch_id || null, semester ? parseInt(semester, 10) : null, user_id);
+    update.run(
+      name ? name.trim() : null, 
+      university ? university.trim() : null,
+      course_type ? course_type.trim() : null,
+      branch_id || null, 
+      semester ? parseInt(semester, 10) : null, 
+      user_id
+    );
 
     const user = db.prepare(`
-      SELECT u.id, u.name, u.enrollment_no, u.email, u.branch_id, u.semester, u.role, u.avatar,
+      SELECT u.id, u.name, u.enrollment_no, u.email, u.university, u.course_type, u.branch_id, u.semester, u.role, u.avatar,
              b.name as branch_name, b.code as branch_code
       FROM users u
       LEFT JOIN branches b ON u.branch_id = b.id
@@ -180,3 +193,4 @@ router.put('/profile', (req, res) => {
 });
 
 module.exports = router;
+
