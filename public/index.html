@@ -6,8 +6,12 @@
   <title>VidyaSetu - GTU Diploma Study Materials, Solved Papers & AI Guru</title>
   <meta name="description" content="Gujarat's dedicated digital learning portal for GTU Diploma engineering students. Access semester-wise study materials, reference textbooks, GTU question banks, verified step-by-step solutions, progress tracking, and AI Doubt Guru.">
   
-  <!-- Favicon & Fonts -->
+  <!-- Favicon, Manifest & Fonts -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#38bdf8">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/components.css">
 </head>
@@ -332,19 +336,25 @@
           </div>
         </div>
 
-        <!-- Resource Navigation Tabs (Materials, Books, Question Bank, Solutions) -->
-        <div class="resource-nav">
+        <!-- Resource Navigation Tabs (Materials, Books, Question Bank, Solutions, Exam Cram Kit, Quiz) -->
+        <div class="resource-nav" id="subjectResourceNav">
           <button class="resource-tab-btn active" data-tab="materials" onclick="StudentApp.switchResourceTab('materials')">
-            📑 Study Materials & Notes
+            📑 Notes & Materials
           </button>
           <button class="resource-tab-btn" data-tab="books" onclick="StudentApp.switchResourceTab('books')">
-            📚 GTU Textbooks & Reference
+            📚 GTU Textbooks
           </button>
           <button class="resource-tab-btn" data-tab="questions" onclick="StudentApp.switchResourceTab('questions')">
-            ❓ GTU Question Bank
+            ❓ Question Papers
           </button>
           <button class="resource-tab-btn" data-tab="solutions" onclick="StudentApp.switchResourceTab('solutions')">
-            💡 Solved Paper Guides
+            💡 Solved Papers
+          </button>
+          <button class="resource-tab-btn" data-tab="cram" onclick="StudentApp.switchResourceTab('cram')" style="background: rgba(245, 158, 11, 0.12); color: #fbbf24; border-color: rgba(245, 158, 11, 0.35);">
+            ⚡ Last-Night Exam Cram Kit
+          </button>
+          <button class="resource-tab-btn" data-tab="quiz" onclick="StudentApp.switchResourceTab('quiz')" style="background: rgba(168, 85, 247, 0.12); color: #c084fc; border-color: rgba(168, 85, 247, 0.35);">
+            🎯 5-Min MCQ Quiz
           </button>
         </div>
 
@@ -478,20 +488,20 @@
       </div>
 
       <div class="quick-prompts-bar">
-        <button class="prompt-chip" onclick="AiTutor.usePrompt('Explain Infix to Postfix conversion using Stack with step table')">
-          📑 Infix to Postfix Tracing
+        <button class="prompt-chip" onclick="AiTutor.usePrompt('Format answer for GTU 7-Mark Question: Definition (1 mark) + Diagram/Schematic (2 marks) + Working Principle (3 marks) + Example (1 mark) for: ' + document.getElementById('aiSubjectBadge').textContent)" style="color: #fbbf24; border-color: rgba(245,158,11,0.4);">
+          ⚡ GTU 7-Mark Format
         </button>
-        <button class="prompt-chip" onclick="AiTutor.usePrompt('Explain AVL Tree 4 types of rotations with diagrams')">
-          🌳 AVL Tree Rotations
+        <button class="prompt-chip" onclick="AiTutor.usePrompt('Explain this concept in simple Gujarati + English (Gujlish) for Diploma student understanding: ' + document.getElementById('aiSubjectBadge').textContent)" style="color: #38bdf8; border-color: rgba(56,189,248,0.4);">
+          🇬🇯 Gujarati-English (Gujlish)
         </button>
-        <button class="prompt-chip" onclick="AiTutor.usePrompt('Calculate Average Waiting Time in Round Robin CPU Scheduling')">
-          ⚡ Round Robin Scheduling
+        <button class="prompt-chip" onclick="AiTutor.usePrompt('List the Top 5 Most Repeated GTU Exam Questions for: ' + document.getElementById('aiSubjectBadge').textContent)" style="color: #f87171; border-color: rgba(239,68,68,0.4);">
+          🔥 5 Repeated Exam Questions
         </button>
-        <button class="prompt-chip" onclick="AiTutor.usePrompt('Explain Pointers in C with memory address swap example')">
-          💻 C Pointers & Memory
+        <button class="prompt-chip" onclick="AiTutor.usePrompt('Give 1-page formula & theorem summary for: ' + document.getElementById('aiSubjectBadge').textContent)">
+          📑 Formula Summary
         </button>
-        <button class="prompt-chip" onclick="AiTutor.usePrompt('Find Matrix Inverse using Gauss Jordan method step by step')">
-          📐 Matrix Inverse Solver
+        <button class="prompt-chip" onclick="AiTutor.usePrompt('Top 10 Lab Viva Voce Questions & Answers for external examination in: ' + document.getElementById('aiSubjectBadge').textContent)">
+          🧪 Lab Viva Q&A
         </button>
       </div>
 
@@ -593,8 +603,13 @@
   <script src="js/student-app.js"></script>
   <script src="js/app.js"></script>
 
-  <!-- Vercel Speed Insights -->
+  <!-- Service Worker Registration for PWA & Speed Insights -->
   <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
     window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
   </script>
   <script defer src="/_vercel/speed-insights/script.js"></script>

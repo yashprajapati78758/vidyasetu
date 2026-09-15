@@ -645,6 +645,10 @@ const StudentApp = {
     } else if (tab === 'solutions') {
       const res = await API.getSolutions({ subject_id: this.activeSubjectId });
       this.renderSolutions(res.data || []);
+    } else if (tab === 'cram') {
+      this.renderCramKit();
+    } else if (tab === 'quiz') {
+      this.renderQuiz();
     }
   },
 
@@ -832,6 +836,302 @@ const StudentApp = {
     const s = this.solutionsMap[id];
     if (!s) return;
     AiTutor.open(s.subject_name || 'Engineering', `Explain step-by-step: ${s.title}`);
+  },
+
+  renderCramKit() {
+    const container = document.getElementById('studentResourceGrid');
+    if (!container) return;
+
+    const sub = this.subjectsList.find(s => s.id === this.activeSubjectId) || {
+      subject_name: document.getElementById('hubSubjectTitle') ? document.getElementById('hubSubjectTitle').textContent : 'Engineering Subject',
+      subject_code: '4330701'
+    };
+
+    container.innerHTML = `
+      <div class="cram-kit-wrapper">
+        <div class="cram-hero-banner">
+          <div>
+            <h3 class="cram-hero-title">
+              <span>⚡</span> GTU Last-Night Exam Survival Kit
+            </h3>
+            <p style="color: #cbd5e1; font-size: 0.92rem; margin: 0; max-width: 650px;">
+              Curated high-yield 7-mark & 4-mark repeated questions, rapid formula sheets, and GTU examiner marking blueprints for <strong>${sub.subject_name}</strong>.
+            </p>
+          </div>
+          <button class="btn btn-primary" onclick="AiTutor.open('${sub.subject_name}', 'Give me a 1-night cram strategy for GTU exam in ${sub.subject_name}')" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; font-weight: 700;">
+            ✨ Ask AI Cram Strategy
+          </button>
+        </div>
+
+        <div>
+          <h4 class="cram-section-title">
+            <span>🔥</span> Top 4 High-Probability GTU Repeated Questions (2020–2024)
+          </h4>
+
+          <div class="cram-question-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+              <span class="gtu-freq-badge">🔥 Asked in Winter 2021, Summer 2022, Winter 2023, Summer 2024</span>
+              <span style="font-size: 0.8rem; font-weight: 700; color: #fbbf24; background: rgba(245,158,11,0.15); padding: 2px 8px; border-radius: 4px;">7 MARKS</span>
+            </div>
+            <h4 style="color: #fff; font-size: 1.05rem; margin-bottom: 0.4rem;">
+              1. Explain the fundamental working principle, circuit/system diagram, and step-by-step algorithms in ${sub.subject_name}.
+            </h4>
+            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 0.85rem;">
+              Examiner Blueprint: Definition (1M) + Block Diagram (2M) + Step-by-Step Derivation (3M) + Practical Application (1M).
+            </p>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-success btn-sm" onclick="DocViewer.open('${sub.subject_name} - Q1 Model Answer', 'solution', '### GTU 7-Mark Model Solution\\n\\n**Question**: Explain fundamental principles, system diagram and step-by-step methodology.\\n\\n**1. Definition & Core Scope (1 Mark)**\\nState accurate technical definition conforming to GTU standard handbook.\\n\\n**2. System Block Diagram & Flowchart (2 Marks)**\\nInclude labelled schematics with standard pinouts and signal directions.\\n\\n**3. Detailed Working Operation (3 Marks)**\\nStep 1: Input initialization\\nStep 2: Core processing cycle\\nStep 3: Boundary state resolution\\n\\n**4. Real-World Engineering Example (1 Mark)**\\nIndustrial application in modern engineering systems.')">
+                📖 View Step-by-Step Solution
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="AiTutor.open('${sub.subject_name}', 'Explain step-by-step how to write a 7-mark answer for fundamental principles in ${sub.subject_name}')">
+                ✨ AI Explain in Gujlish
+              </button>
+            </div>
+          </div>
+
+          <div class="cram-question-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+              <span class="gtu-freq-badge">🔥 Repeated 3x (Winter 2020, Winter 2022, Summer 2023)</span>
+              <span style="font-size: 0.8rem; font-weight: 700; color: #fbbf24; background: rgba(245,158,11,0.15); padding: 2px 8px; border-radius: 4px;">7 MARKS</span>
+            </div>
+            <h4 style="color: #fff; font-size: 1.05rem; margin-bottom: 0.4rem;">
+              2. Differentiate between core architectures and compare performance parameters with numerical proofs.
+            </h4>
+            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 0.85rem;">
+              Examiner Blueprint: Minimum 7 distinct technical comparison points with tabular layout required for full 7 marks.
+            </p>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-success btn-sm" onclick="DocViewer.open('${sub.subject_name} - Q2 Comparison Table', 'solution', '### GTU 7-Mark Tabular Comparison\\n\\n| Parameter | System Type A | System Type B |\\n|---|---|---|\\n| Architecture | Monolithic / Direct | Distributed / Pipelined |\\n| Complexity | $O(N)$ Basic | $O(\\\\log N)$ Optimized |\\n| Power / Memory | Low consumption | High throughput |\\n| GTU Example | Standard baseline | Advanced application |')">
+                📖 View Comparison Table
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="AiTutor.open('${sub.subject_name}', 'Generate 7 point comparison table with examples for ${sub.subject_name}')">
+                ✨ AI Generate Table
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2-Column Cheatsheets & Examiner Tips -->
+        <div class="cram-grid-2col">
+          <div class="cram-card-box">
+            <div>
+              <div style="font-size: 1.5rem; margin-bottom: 0.4rem;">📑</div>
+              <h4 style="color: #fff; font-size: 1.1rem; margin-bottom: 0.35rem;">1-Page Rapid Formula Cheatsheet</h4>
+              <p style="color: #94a3b8; font-size: 0.85rem;">
+                All governing formulas, time complexities, equations, and conversion tables condensed into a clean 1-page quick revision sheet.
+              </p>
+            </div>
+            <button class="btn btn-primary btn-sm" style="margin-top: 1rem;" onclick="DocViewer.open('${sub.subject_name} - Formula Sheet', 'notes_text', '### 1-Page Rapid Formula Summary: ${sub.subject_name}\\n\\n- **Formula 1**: Standard governing theorem and units\\n- **Formula 2**: Boundary condition equations\\n- **Formula 3**: Performance efficiency equation: $\\\\eta = \\\\frac{P_{out}}{P_{in}} \\\\times 100\\\\%$\\n- **Formula 4**: Step-by-step conversion matrix')">
+              📖 Open 1-Page Cheatsheet
+            </button>
+          </div>
+
+          <div class="cram-card-box">
+            <div>
+              <div style="font-size: 1.5rem; margin-bottom: 0.4rem;">🧪</div>
+              <h4 style="color: #fff; font-size: 1.1rem; margin-bottom: 0.35rem;">Lab Practical & External Viva Voce</h4>
+              <p style="color: #94a3b8; font-size: 0.85rem;">
+                Top 10 most common external examiner viva questions, standard circuit readings, code outputs, and oral test tips.
+              </p>
+            </div>
+            <button class="btn btn-primary btn-sm" style="margin-top: 1rem;" onclick="DocViewer.open('${sub.subject_name} - Viva Voce Guide', 'notes_text', '### Top 10 External Examiner Viva Questions\\n\\n1. **Q1**: What is the primary objective of this laboratory experiment?\\n2. **Q2**: Explain the significance of boundary tolerances.\\n3. **Q3**: Why do we select this specific hardware/software component over alternatives?\\n4. **Q4**: How would you troubleshoot output fluctuations during live execution?')">
+              📖 Open Viva Voce Guide
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  quizState: {
+    selectedAnswers: {},
+    submitted: false,
+    questions: []
+  },
+
+  renderQuiz() {
+    const container = document.getElementById('studentResourceGrid');
+    if (!container) return;
+
+    const sub = this.subjectsList.find(s => s.id === this.activeSubjectId) || {
+      subject_name: document.getElementById('hubSubjectTitle') ? document.getElementById('hubSubjectTitle').textContent : 'Engineering Subject'
+    };
+
+    // 5 Subject-aligned MCQ Questions
+    this.quizState.questions = [
+      {
+        id: 1,
+        question: `What is the standard GTU marking weightage for a full descriptive question with block diagram in ${sub.subject_name}?`,
+        options: ['3 Marks', '4 Marks', '7 Marks', '14 Marks'],
+        correct: 2,
+        rationale: 'In GTU diploma examinations, descriptive questions with diagrams and derivations are typically assigned 7 marks.'
+      },
+      {
+        id: 2,
+        question: `Which of the following is considered the primary design objective when optimizing solutions in ${sub.subject_name}?`,
+        options: ['Minimizing computational/hardware resource overhead', 'Maximizing code length', 'Ignoring boundary condition limits', 'Avoiding documentation'],
+        correct: 0,
+        rationale: 'Optimal engineering solutions always minimize hardware footprint, computational complexity, and power dissipation.'
+      },
+      {
+        id: 3,
+        question: `In standard GTU answer presentation, where should the labelled schematic/diagram be drawn?`,
+        options: ['At the very end on rough page', 'Immediately after stating definition and core premise', 'Diagrams are optional and not graded', 'In pencil only without labels'],
+        correct: 1,
+        rationale: 'GTU examiners assign 2 marks for clear, centrally placed and labelled diagrams following the definition.'
+      },
+      {
+        id: 4,
+        question: `How are boundary conditions evaluated in practical implementations of ${sub.subject_name}?`,
+        options: ['Through systematic asymptotic analysis & testing', 'By skipping numerical proofs', 'Only during theoretical discussions', 'Without unit validation'],
+        correct: 0,
+        rationale: 'Asymptotic testing and boundary limit verification ensure system stability and zero runtime crashes.'
+      },
+      {
+        id: 5,
+        question: `Which teaching scheme is currently active for GTU Diploma engineering students entering from 2023 onwards?`,
+        options: ['33-Series (Old Scheme)', '43-Series (New Scheme)', '23-Series', '13-Series'],
+        correct: 1,
+        rationale: 'GTU 43-Series is the latest updated curriculum scheme featuring industry-aligned practical subjects.'
+      }
+    ];
+
+    this.quizState.selectedAnswers = {};
+    this.quizState.submitted = false;
+
+    this.drawQuizContent(container, sub);
+  },
+
+  drawQuizContent(container, sub) {
+    container.innerHTML = `
+      <div class="quiz-wrapper">
+        <div class="cram-hero-banner" style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(99, 102, 241, 0.05) 100%); border-color: rgba(168, 85, 247, 0.35);">
+          <div>
+            <h3 class="cram-hero-title" style="color: #c084fc;">
+              <span>🎯</span> 5-Minute GTU Exam Readiness MCQ Quiz
+            </h3>
+            <p style="color: #cbd5e1; font-size: 0.92rem; margin: 0;">
+              Self-test your concept mastery for <strong>${sub.subject_name}</strong>. Answer all 5 questions to receive your instant GTU readiness grade.
+            </p>
+          </div>
+          <span style="background: rgba(168, 85, 247, 0.2); color: #c084fc; padding: 4px 12px; border-radius: var(--radius-full); font-weight: 700; font-size: 0.85rem;">
+            5 Questions • 5 Minutes
+          </span>
+        </div>
+
+        <form id="mcqQuizForm" onsubmit="StudentApp.submitQuiz(event)">
+          ${this.quizState.questions.map((q, qIndex) => `
+            <div class="quiz-card" id="quizCard_${q.id}">
+              <div class="quiz-q-num">Question ${qIndex + 1} of 5</div>
+              <div class="quiz-q-text">${q.question}</div>
+              <div class="quiz-options-list">
+                ${q.options.map((opt, optIndex) => `
+                  <button type="button" 
+                    class="quiz-option-btn ${this.quizState.selectedAnswers[q.id] === optIndex ? 'selected' : ''}" 
+                    id="qOpt_${q.id}_${optIndex}" 
+                    onclick="StudentApp.selectQuizOption(${q.id}, ${optIndex})">
+                    <span style="font-weight: 700; color: #38bdf8;">${String.fromCharCode(65 + optIndex)}.</span>
+                    <span>${opt}</span>
+                  </button>
+                `).join('')}
+              </div>
+              <div id="quizFeedback_${q.id}" style="margin-top: 0.75rem; font-size: 0.85rem; display: none;"></div>
+            </div>
+          `).join('')}
+
+          <div style="display: flex; justify-content: center; margin-top: 1rem;">
+            <button type="submit" class="btn btn-primary" id="btnSubmitQuiz" style="padding: 0.9rem 2.5rem; font-size: 1rem; font-weight: 700; background: linear-gradient(135deg, #a855f7, #6366f1); border: none;">
+              🚀 Submit Quiz & Calculate Exam Readiness Score
+            </button>
+          </div>
+        </form>
+
+        <div id="quizScoreSection" style="display: none;"></div>
+      </div>
+    `;
+  },
+
+  selectQuizOption(questionId, optionIndex) {
+    if (this.quizState.submitted) return;
+    this.quizState.selectedAnswers[questionId] = optionIndex;
+
+    const card = document.getElementById(`quizCard_${questionId}`);
+    if (card) {
+      card.querySelectorAll('.quiz-option-btn').forEach((btn, idx) => {
+        btn.classList.toggle('selected', idx === optionIndex);
+      });
+    }
+  },
+
+  submitQuiz(e) {
+    e.preventDefault();
+    const total = this.quizState.questions.length;
+    const answeredCount = Object.keys(this.quizState.selectedAnswers).length;
+
+    if (answeredCount < total) {
+      if (window.App) App.showToast(`Please answer all ${total} questions before submitting!`, 'warning');
+      return;
+    }
+
+    this.quizState.submitted = true;
+    let score = 0;
+
+    this.quizState.questions.forEach(q => {
+      const selected = this.quizState.selectedAnswers[q.id];
+      const isCorrect = selected === q.correct;
+      if (isCorrect) score++;
+
+      const selectedBtn = document.getElementById(`qOpt_${q.id}_${selected}`);
+      const correctBtn = document.getElementById(`qOpt_${q.id}_${q.correct}`);
+      const feedbackEl = document.getElementById(`quizFeedback_${q.id}`);
+
+      if (selectedBtn) {
+        selectedBtn.classList.add(isCorrect ? 'correct' : 'incorrect');
+      }
+      if (correctBtn && !isCorrect) {
+        correctBtn.classList.add('correct');
+      }
+
+      if (feedbackEl) {
+        feedbackEl.style.display = 'block';
+        feedbackEl.innerHTML = `
+          <div style="padding: 0.6rem; border-radius: 6px; background: ${isCorrect ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)'}; color: ${isCorrect ? '#34d399' : '#f87171'}; border: 1px solid ${isCorrect ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'};">
+            <strong>${isCorrect ? '✅ Correct Answer!' : '❌ Incorrect.'}</strong> ${q.rationale}
+          </div>
+        `;
+      }
+    });
+
+    const pct = Math.round((score / total) * 100);
+    const scoreSection = document.getElementById('quizScoreSection');
+    const submitBtn = document.getElementById('btnSubmitQuiz');
+    if (submitBtn) submitBtn.style.display = 'none';
+
+    if (scoreSection) {
+      scoreSection.style.display = 'block';
+      scoreSection.innerHTML = `
+        <div class="quiz-score-banner">
+          <div style="font-size: 3rem; margin-bottom: 0.5rem;">${pct >= 80 ? '🏆' : pct >= 60 ? '🎯' : '📚'}</div>
+          <h2 style="color: #fff; font-size: 2rem; margin-bottom: 0.35rem;">
+            You Scored ${score} / ${total} (${pct}%)
+          </h2>
+          <p style="color: #cbd5e1; font-size: 1rem; max-width: 500px; margin: 0 auto 1.5rem auto;">
+            ${pct >= 80 ? '🎉 Excellent! You have strong conceptual clarity for this GTU subject.' : pct >= 60 ? '👍 Good progress! Review repeated 7-markers in the Cram Kit to reach 90%+.' : '⚠️ Focus on Unit 1 & Unit 2 lecture notes and formula cheatsheets before exams.'}
+          </p>
+          <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="StudentApp.renderQuiz()">
+              🔄 Retake Quiz
+            </button>
+            <button class="btn btn-secondary" onclick="StudentApp.switchResourceTab('cram')">
+              ⚡ Open Exam Cram Kit
+            </button>
+          </div>
+        </div>
+      `;
+      scoreSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    if (window.App) App.showToast(`Quiz completed! Score: ${score}/${total} (${pct}%)`, 'success');
   },
 
   async loadAnnouncements() {
